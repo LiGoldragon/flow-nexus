@@ -3,7 +3,7 @@
 #[path = "../../../ethos/generated/library.rs"]
 mod generated;
 pub use generated::*;
-#[path = "../../../ethos/generated/memory.rs"]
-pub mod memory;
 #[path = "../../../ethos/generated/evidence.rs"]
 pub mod evidence;
+#[path = "../../../ethos/generated/memory.rs"]
+pub mod memory;

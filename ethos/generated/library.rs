@@ -295,6 +295,16 @@ pub struct NamespaceIdentity(pub String);
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct OwnerUid(pub i64);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct SecurityConfiguration {
+    pub owner_uid: OwnerUid,
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub struct CapsuleConfiguration {
     pub home_path: HomePath,
     pub transcript_directory: TranscriptDirectory,
@@ -354,4 +364,5 @@ pub struct Configuration {
     pub module_source_vector: std::vec::Vec<ModuleSource>,
     pub identity_policy: IdentityPolicy,
     pub capsule_configuration: CapsuleConfiguration,
+    pub security_configuration: SecurityConfiguration,
 }

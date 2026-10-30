@@ -1,9 +1,14 @@
 Memory
-[ :crate:[ Address FlowId SessionId State TranscriptPath ]
-  :crate:evidence:[ RequestId ProcessIncarnation ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase EndPhase AdmittedRequest ] ] ; imports: record fields, defined once
-[ ProcessBinding.{ FlowId ProcessIncarnation } ; process binding
+[ :crate:[ Address FlowId SessionId State TranscriptPath Configuration ]
+  :crate:evidence:[ RequestId ProcessIncarnation ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase EndPhase AdmittedRequest VerificationTarget VerificationState MetaConfigureOccurred ArrivalOrdinal ContentFingerprint HostBootIdentity PidNamespaceIdentity ] ] ; imports: record fields and evidence
+[ ConfigurationRecord.{ Configuration MetaConfigureOccurred } ; configuration metadata
+  AddressReservation.{ Address FlowId RequestId }                       ; address reservation
+  ProcessBinding.{ FlowId ProcessIncarnation }                          ; process binding
   LaunchAttempt.{ RequestId FlowId Address ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase } ; launch attempt
-  EndAttempt.{ RequestId FlowId EndPhase } ; end attempt
-  Permaflow.{ Address Vector<FlowId> } ; permaflow
+  EndAttempt.{ RequestId FlowId EndPhase }                               ; end attempt
+  Permaflow.{ Address Vector<FlowId> }                                   ; permaflow
   Flow.{ FlowId Address Option<SessionId> State Option<FlowId> Option<TranscriptPath> } ; flow
-  Queue.{ Address Vector<AdmittedRequest> } ] ; records: exactly the durable row types
+  Queue.{ Address Vector<AdmittedRequest> }                              ; queue
+  Verification.{ VerificationTarget ContentFingerprint HostBootIdentity PidNamespaceIdentity VerificationState }                  ; verification
+  RequestAllocator.{ RequestId }                                         ; private request allocator
+  ArrivalAllocator.{ Address ArrivalOrdinal } ]                          ; per-address allocator

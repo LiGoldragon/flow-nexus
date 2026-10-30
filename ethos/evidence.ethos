@@ -1,33 +1,47 @@
 Library
-[ :crate:[ Address FlowId SessionId Declaration ModuleContent NamespaceIdentity HerdrSocketPath HerdrSessionName ModelProfile HarnessProfile IdentityPolicy CapsuleConfiguration Request State TranscriptPath ]
-  :crate:memory:[ LaunchAttempt EndAttempt Queue ] ] ; imports: domain values and stored rows for private debug
+[ :crate:[ Address FlowId SessionId Declaration ModuleContent NamespaceIdentity HerdrSocketPath HerdrSessionName ModelProfile HarnessProfile IdentityPolicy CapsuleConfiguration Request State TranscriptPath ModelIdentifier Tokens Configuration Threshold RecordHook Observation ]
+  :crate:memory:[ ProcessBinding LaunchAttempt EndAttempt Permaflow Flow Queue ConfigurationRecord AddressReservation Verification RequestAllocator ArrivalAllocator ] ] ; imports: domain values and stored rows
 [ RequestId.Integer
-  HostBootIdentity.String
+  HostBootIdentity.String                                      ; process incarnation
   PidNamespaceIdentity.String
   ProcessId.Integer
   ProcessStartTicks.Integer
-  ProcessIncarnation.{ HostBootIdentity PidNamespaceIdentity ProcessId ProcessStartTicks } ; process incarnation
+  ProcessIncarnation.{ HostBootIdentity PidNamespaceIdentity ProcessId ProcessStartTicks }
   PaneId.String
   CorrelationLocator.String
   ServerBinding.{ HerdrSocketPath HerdrSessionName ProcessIncarnation } ; server binding
-  CreationLocator.{ ServerBinding CorrelationLocator } ; creation locator
-  CapsuleHandle.{ CreationLocator PaneId ProcessIncarnation } ; capsule handle
-  PromptContent.{ SystemPrompt.String FirstPrompt.String } ; prompt content
+  CreationLocator.{ ServerBinding CorrelationLocator }              ; creation locator
+  CapsuleHandle.{ CreationLocator PaneId ProcessIncarnation }       ; capsule handle
+  PromptContent.{ SystemPrompt.String FirstPrompt.String }          ; prompt content
   ResolvedLaunch.{ Declaration ModelProfile HarnessProfile IdentityPolicy CapsuleConfiguration Vector<ModuleContent> PromptContent } ; resolved launch
-  AttemptedAction.[ CreatePane StartHarness StopHarness ClosePane ] ; attempted action
+  AttemptedAction.[ CreatePane StartHarness StopHarness ClosePane ]  ; attempted action
   PartialResources.{ CreationLocator Option<PaneId> Option<ProcessIncarnation> } ; partial resources
   ResourceEvidence.[ NoneConfirmed.CreationLocator LocatedPartial.PartialResources LocatedComplete.CapsuleHandle Uncertain.{ CreationLocator AttemptedAction } ] ; resource evidence
   PreparationFailureReason.[ PaneRefused InvalidNamespace TransportFailure ] ; preparation failure reason
   LaunchFailureReason.[ HarnessRefused PermissionRequired TransportFailure ] ; launch failure reason
-  PreparationFailure.{ ResourceEvidence PreparationFailureReason } ; preparation failure
-  LaunchFailure.{ ResourceEvidence LaunchFailureReason } ; launch failure
+  PreparationFailure.{ ResourceEvidence PreparationFailureReason }    ; preparation failure
+  LaunchFailure.{ ResourceEvidence LaunchFailureReason }               ; launch failure
   LaunchPhase.[ Reserved Prepared.CapsuleHandle Submitted.CapsuleHandle Started.StartWitness Cleanup.ResourceEvidence RecoveryRequired.ResourceEvidence Complete ] ; launch phase
   EndPhase.[ Intended.StartWitness StopRequested.StartWitness Exited.ExitWitness RecoveryRequired.StartWitness Complete ] ; end phase
-  ExitProvenance.[ KernelProcess HarnessServer ] ; exit provenance
-  StartWitness.{ CapsuleHandle SessionId TranscriptPath } ; start witness
-  ExitWitness.{ CapsuleHandle ExitProvenance } ; exit witness
-  CreationIntent.{ CreationLocator AttemptedAction } ; creation intent
-  AdmittedRequest.{ RequestId Address ArrivalOrder.Integer Request } ; admitted request
-  DebugProjection.{ Vector<LaunchAttempt> Vector<EndAttempt> Vector<Queue> } ] ; types: private attempt and queue projection
+  ExitProvenance.[ KernelProcess HarnessServer ]                     ; exit provenance
+  StartWitness.{ CapsuleHandle SessionId TranscriptPath }             ; start witness
+  ExitWitness.{ CapsuleHandle ExitProvenance }                        ; exit witness
+  CreationIntent.{ CreationLocator AttemptedAction }                 ; creation intent
+  AdmittedRequest.{ RequestId Address ArrivalOrdinal Request }       ; admitted request
+  ContentFingerprint.Vector<Integer>                                  ; exact content identity
+  ArrivalOrdinal.Integer                                               ; per-address order
+  MetaConfigureOccurred.Boolean                                        ; first-Configure fact
+  DebugProjection.Vector<Record>                                      ; private projection
+  VerificationTarget.[ Flow.FlowId Binding.FlowId Launch.RequestId End.RequestId Reservation.Address ] ; verification target
+  ReconciliationEvidence.[ Started.StartWitness Exited.ExitWitness ConfirmedAbsent.{ CreationLocator ExitProvenance } LocatedPartial.PartialResources ] ; target-specific live observation
+  VerificationState.[ Unverified Verified.ReconciliationEvidence RecoveryRequired.ResourceEvidence ] ; verification state
+   Record.[ ConfigurationRecord.ConfigurationRecord Flow.Flow Permaflow.Permaflow ProcessBinding.ProcessBinding LaunchAttempt.LaunchAttempt EndAttempt.EndAttempt AddressReservation.AddressReservation Queue.Queue Verification.Verification RequestAllocator.RequestAllocator ArrivalAllocator.ArrivalAllocator ] ; complete durable row kinds
+  RecordKey.[ ConfigurationSingleton Flow.FlowId Permaflow.Address ProcessBinding.FlowId LaunchAttempt.RequestId EndAttempt.RequestId AddressReservation.Address Queue.Address Verification.VerificationTarget RequestAllocatorSingleton ArrivalAllocator.Address ] ; row identity
+  Mutation.[ Put.Record Remove.RecordKey ]                             ; atomic change
+  MutationBatch.Vector<Mutation>                                      ; one transaction
+  ReadSelector.[ All ByKey.RecordKey ]                                ; typed projection selector
+  ReconciliationTarget.VerificationTarget                              ; verification request
+  Invariant.[ DanglingReference.RecordKey DuplicateIdentity.FlowId DuplicateAddress.Address HistoryOwnership.FlowId PredecessorCycle.FlowId PredecessorAddress.FlowId QueueOrder.Address AttemptReservation.RecordKey SnapshotMismatch.RecordKey UnresolvedEffect.RecordKey LiveResource.RecordKey ReconciliationRequired.VerificationTarget DuplicateMutation.RecordKey AmbiguousReference.RecordKey DuplicateRequest.RequestId CounterRegression.RecordKey CounterOverflow.RecordKey AllocationStateRequired.RecordKey StoreRelocation ] ; typed violation
+] ; types
 [] ; traits: compatible behavior is implemented after the root-capability contract is settled
 [] ; associations

@@ -1,17 +1,19 @@
 Operation
-[ :flow_nexus_types:[ Address Remembering FlowId Brief Configuration Declaration Request Threshold RecordHook Observation State SessionId ]
-  :flow_nexus_types:evidence:DebugProjection ] ; imports: typed operation vocabulary
+[ :flow_nexus_types:[ Address Remembering FlowId Brief Configuration Declaration Request Threshold RecordHook Observation ]
+  :flow_nexus_types:evidence:[ MutationBatch ReadSelector VerificationTarget Record Invariant DebugProjection ] ] ; imports: typed operation vocabulary
 [ Configure.Configuration
   Declare.Declaration
   Threshold.Threshold
   RecordHook.RecordHook
   Observe.Address
-  Debug
-  Reconcile.FlowId
+  Debug.ReadSelector
+  Reconcile.VerificationTarget
+  Mutate.MutationBatch
+  Read.ReadSelector
   Start.{ Address Remembering Brief Declaration } ; start
   Stop.FlowId
   Deliver.{ FlowId Request } ; deliver
-  Enqueue.{ Address Request } ; enqueue
+  Enqueue.{ Address Request }
   Replace.FlowId ]
 [ Configured
   Declared
@@ -20,10 +22,12 @@ Operation
   Observed.Vector<Observation>
   Debugged.DebugProjection
   Reconciled
+  Mutated
+  ReadRecords.Vector<Record>
   Started.FlowId
   Stopped
   Delivered
   Enqueued
   Replaced.FlowId
-  Failed.[ ConfigurationRefused DeclarationRefused ThresholdRefused HookRefused ObservationRefused DebugRefused ReconciliationRefused CapsuleRefused HarnessRefused StoreRefused RecoveryRequired Unavailable ] ] ; failed
-[]                                      ; additional types
+  Failed.[ ConfigurationRefused DeclarationRefused ThresholdRefused HookRefused ObservationRefused DebugRefused ReconciliationRefused Integrity.Invariant CapsuleRefused HarnessRefused StoreRefused RecoveryRequired Unavailable ] ] ; outcomes
+[] ; additional types

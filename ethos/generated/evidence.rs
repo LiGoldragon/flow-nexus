@@ -208,21 +208,137 @@ pub struct CreationIntent {
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
-pub struct ArrivalOrder(pub i64);
-#[rustfmt::skip]
-#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub struct AdmittedRequest {
     pub request_id: RequestId,
     pub address: crate::Address,
-    pub arrival_order: ArrivalOrder,
+    pub arrival_ordinal: ArrivalOrdinal,
     pub request: crate::Request,
 }
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
-pub struct DebugProjection {
-    pub launch_attempt_vector: std::vec::Vec<crate::memory::LaunchAttempt>,
-    pub end_attempt_vector: std::vec::Vec<crate::memory::EndAttempt>,
-    pub queue_vector: std::vec::Vec<crate::memory::Queue>,
+pub struct ContentFingerprint(pub std::vec::Vec<i64>);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct ArrivalOrdinal(pub i64);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct MetaConfigureOccurred(pub bool);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct DebugProjection(pub std::vec::Vec<Record>);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum VerificationTarget {
+    Flow(crate::FlowId),
+    Binding(crate::FlowId),
+    Launch(RequestId),
+    End(RequestId),
+    Reservation(crate::Address),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct ConfirmedAbsent_Data {
+    pub creation_locator: CreationLocator,
+    pub exit_provenance: ExitProvenance,
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum ReconciliationEvidence {
+    Started(StartWitness),
+    Exited(ExitWitness),
+    ConfirmedAbsent(ConfirmedAbsent_Data),
+    LocatedPartial(PartialResources),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum VerificationState {
+    Unverified,
+    Verified(ReconciliationEvidence),
+    RecoveryRequired(ResourceEvidence),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum Record {
+    ConfigurationRecord(crate::memory::ConfigurationRecord),
+    Flow(crate::memory::Flow),
+    Permaflow(crate::memory::Permaflow),
+    ProcessBinding(crate::memory::ProcessBinding),
+    LaunchAttempt(crate::memory::LaunchAttempt),
+    EndAttempt(crate::memory::EndAttempt),
+    AddressReservation(crate::memory::AddressReservation),
+    Queue(crate::memory::Queue),
+    Verification(crate::memory::Verification),
+    RequestAllocator(crate::memory::RequestAllocator),
+    ArrivalAllocator(crate::memory::ArrivalAllocator),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum RecordKey {
+    ConfigurationSingleton,
+    Flow(crate::FlowId),
+    Permaflow(crate::Address),
+    ProcessBinding(crate::FlowId),
+    LaunchAttempt(RequestId),
+    EndAttempt(RequestId),
+    AddressReservation(crate::Address),
+    Queue(crate::Address),
+    Verification(VerificationTarget),
+    RequestAllocatorSingleton,
+    ArrivalAllocator(crate::Address),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum Mutation {
+    Put(Record),
+    Remove(RecordKey),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct MutationBatch(pub std::vec::Vec<Mutation>);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum ReadSelector {
+    All,
+    ByKey(RecordKey),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct ReconciliationTarget(pub VerificationTarget);
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum Invariant {
+    DanglingReference(RecordKey),
+    DuplicateIdentity(crate::FlowId),
+    DuplicateAddress(crate::Address),
+    HistoryOwnership(crate::FlowId),
+    PredecessorCycle(crate::FlowId),
+    PredecessorAddress(crate::FlowId),
+    QueueOrder(crate::Address),
+    AttemptReservation(RecordKey),
+    SnapshotMismatch(RecordKey),
+    UnresolvedEffect(RecordKey),
+    LiveResource(RecordKey),
+    ReconciliationRequired(VerificationTarget),
+    DuplicateMutation(RecordKey),
+    AmbiguousReference(RecordKey),
+    DuplicateRequest(RequestId),
+    CounterRegression(RecordKey),
+    CounterOverflow(RecordKey),
+    AllocationStateRequired(RecordKey),
+    StoreRelocation,
 }

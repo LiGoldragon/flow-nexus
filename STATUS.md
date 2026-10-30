@@ -40,3 +40,13 @@ The shared Library now contains complete draft configuration and a separate evid
 Nix compiled the corrected main anatomy without and with Datom at `/nix/store/iznw4cj8mgp4lzci317hf91lqydpb97d-flow-nexus-anatomy-build-1.0.0` and `/nix/store/dz1dws13kc7b4y5mqppm6f83aig0sjnl-flow-nexus-anatomy-build-1.0.0`. Corrected ordinary/meta Datom builds are `/nix/store/zl1x25bb1wr8i6anq68k3paykrgg2rv2-signal-flow-nexus-anatomy-build-1.0.0` and `/nix/store/vjv3wq6mvh7czvk4rnrbx9mxklsg1ya8-meta-signal-flow-nexus-anatomy-build-1.0.0`.
 
 The separate schema test repository preserves two failures against the earlier immutable anatomy: supplied bare-string newtype forms in Launch and End conflict with the current structural derive projection. Compilation and self-roundtrip tests do not settle that interface. Primary is deciding the expected shape/upstream action. Complete typed meta batch mutations and authenticated entry bootstrap remain under review. Translator remains a design-only draft.
+
+## Internal Memory implementation slice
+
+The runtime library now implements owner-batch candidate validation, a typed durable Memory table with atomic commits, and a component-owned Kameo Memory actor/port. Typed replies preserve committed/rejected/storage-failure outcomes; actor transport failure is separately MutationUncertain and never causes retry. The source exposes no socket or executable and launches nothing.
+
+Completed rules include duplicate batch keys, referential/history/predecessor checks, address/reservation ownership, captured snapshot consistency, queue ordering, monotonic allocator validation, typed meta Verified-state refusal, and verification invalidation on target changes. Unresolved active rows are conservatively protected until the genuine reconciliation path exists. The verification fields carry fingerprints/boot/namespace; producing and validating live evidence is not yet implemented, and no stored state alone grants caller authority.
+
+The reservation/admission allocator operations, authenticated Operation/Signal actor entry, OwnerLauncher kernel ancestry classification, default seeding, live reconciliation, and launch/end effects remain separate work. Translator stays unbuilt. Source generation still uses the older upstream roots without claiming Input/Output/implied-trait conformance.
+
+Nix compiled this internal slice without/with Datom at `/nix/store/0zvs0qzc632aijbmqc2430r3ilfisrki-flow-nexus-anatomy-build-1.0.0` and `/nix/store/hcx1m1na2ispxj5jwczj5sxa3bgl791w-flow-nexus-anatomy-build-1.0.0`. This is compile evidence; independent Memory/actor scenarios are next.

@@ -48,12 +48,14 @@ Library
   HerdrSocketPath.String
   HerdrSessionName.String
   NamespaceIdentity.String
+  OwnerUid.Integer
+  SecurityConfiguration.{ OwnerUid }
   CapsuleConfiguration.{ HomePath TranscriptDirectory WorkingDirectory HerdrExecutablePath HerdrSocketPath HerdrSessionName NamespaceIdentity } ; capsule configuration
   State.[ Started Working Idle Ended ] ; state
   TranscriptPath.String
   Threshold.{ ModelIdentifier Tokens } ; threshold
   RecordHook.{ FlowId Option<SessionId> State } ; record hook
   Observation.{ Address FlowId State } ; observation
-  Configuration.{ MetaflowName MemoryPath SocketConfiguration Vector<Declaration> Vector<LayerAssignment> Vector<ModelProfile> Vector<HarnessProfile> Vector<ModuleSource> IdentityPolicy CapsuleConfiguration } ] ; configuration
+  Configuration.{ MetaflowName MemoryPath SocketConfiguration Vector<Declaration> Vector<LayerAssignment> Vector<ModelProfile> Vector<HarnessProfile> Vector<ModuleSource> IdentityPolicy CapsuleConfiguration SecurityConfiguration } ] ; configuration
 []                                                    ; traits
 []                                                    ; associations

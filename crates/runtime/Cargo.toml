@@ -12,3 +12,5 @@ datom = ["dep:datom-codec", "flow-nexus-types/datom"]
 rkyv.workspace = true
 datom-codec = { workspace = true, optional = true }
 flow-nexus-types.workspace = true
+memory = { git = "https://github.com/LiGoldragon/memory", rev = "bfdde49897d060ce29f962ee35bdfaed3b50dd6b" }
+kameo = "0.22"
