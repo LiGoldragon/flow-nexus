@@ -1,7 +1,10 @@
 //! Serialized Memory commands and sealed reservation ordering/lifecycle capabilities.
 use crate::{
     reservation::{Reservable, ReservationResolvable},
-    store::{LayoutBearing, MemoryStore, Openable, Readable, StoreFailure, StoreLayout, Writable},
+    store::{
+        LayoutBearing, MemoryStore, Readable, Reopenable, StoreAnchor, StoreAnchored, StoreFailure,
+        StoreLayout, Writable,
+    },
 };
 use flow_nexus_types::evidence::{
     Invariant, MutationBatch, ReadSelector, Record, ReservationOutcome, ReservationResolution,
@@ -11,15 +14,14 @@ use kameo::{
     actor::{Actor, ActorId, ActorRef, Spawn, WeakActorRef},
     error::ActorStopReason,
     message::{Context, Message},
-    request::PendingReply,
 };
 use std::{convert::Infallible, future::Future};
+use tokio::sync::oneshot;
 
 #[derive(Clone, Debug)]
 pub enum MemoryCommand {
     Read(ReadSelector),
     OwnerBatch(MutationBatch),
-    Reserve(ReserveLaunch),
     ResolveReservation(ReserveLaunch),
 }
 #[derive(Debug)]
@@ -36,6 +38,7 @@ pub enum ActorTransportFailure {
     ReadUnavailable,
     MutationUncertain,
     WrongActor,
+    NotAdmitted,
 }
 pub struct MemoryActor {
     // Taken by on_stop before shutdown is announced, so a restart can reopen the same store.
@@ -45,6 +48,7 @@ pub struct MemoryActor {
 pub struct MemoryPort {
     actor: ActorRef<MemoryActor>,
     layout: StoreLayout,
+    anchor: StoreAnchor,
 }
 /// An observation target, never permission to submit or to declare final absence.
 #[derive(Clone)]
@@ -63,7 +67,7 @@ pub struct OrderedReservation {
 }
 pub struct ReservationSubmission {
     ticket: OrderedReservation,
-    pending: PendingReply<MemoryCommand, Result<MemoryReply, Infallible>>,
+    pending: oneshot::Receiver<MemoryReply>,
 }
 /// Minted only after the old actor stopped and released its store, then reopened that layout.
 pub struct RecoveredMemory {
@@ -72,6 +76,10 @@ pub struct RecoveredMemory {
 }
 // This message is private: claimed fields cannot manufacture its ordering guarantee.
 struct ResolveFinal(ReserveLaunch);
+struct ReserveDispatch {
+    request: ReserveLaunch,
+    reply: oneshot::Sender<MemoryReply>,
+}
 
 impl Actor for MemoryActor {
     type Args = MemoryStore;
@@ -108,10 +116,6 @@ impl Message<MemoryCommand> for MemoryActor {
                 Err(StoreFailure::Integrity(error)) => MemoryReply::Rejected(error),
                 Err(error) => MemoryReply::StoreFailed(error),
             },
-            MemoryCommand::Reserve(request) => match store.reserve(&request) {
-                Ok(outcome) => MemoryReply::Reservation(outcome),
-                Err(error) => MemoryReply::StoreFailed(error),
-            },
             MemoryCommand::ResolveReservation(request) => match store.resolve(&request) {
                 // No ordering or old-actor termination witness accompanied this observation.
                 Ok(ReservationResolution::AbsentFinal) => {
@@ -121,6 +125,20 @@ impl Message<MemoryCommand> for MemoryActor {
                 Err(error) => MemoryReply::StoreFailed(error),
             },
         })
+    }
+}
+impl Message<ReserveDispatch> for MemoryActor {
+    type Reply = ();
+    async fn handle(&mut self, dispatch: ReserveDispatch, _: &mut Context<Self, Self::Reply>) {
+        let reply = match self.store.as_mut() {
+            Some(store) => match store.reserve(&dispatch.request) {
+                Ok(outcome) => MemoryReply::Reservation(outcome),
+                Err(error) => MemoryReply::StoreFailed(error),
+            },
+            None => MemoryReply::StoreFailed(StoreFailure::Closed),
+        };
+        // A cancelled receiver loses only transport: the already-committed fact remains in Memory.
+        let _ = dispatch.reply.send(reply);
     }
 }
 impl Message<ResolveFinal> for MemoryActor {
@@ -143,6 +161,7 @@ impl From<MemoryStore> for MemoryPort {
     fn from(store: MemoryStore) -> Self {
         Self {
             layout: store.layout(),
+            anchor: store.anchor(),
             actor: MemoryActor::spawn(store),
         }
     }
@@ -165,9 +184,7 @@ impl MemoryAccessible for MemoryPort {
             MemoryCommand::Read(_) | MemoryCommand::ResolveReservation(_) => {
                 ActorTransportFailure::ReadUnavailable
             }
-            MemoryCommand::OwnerBatch(_) | MemoryCommand::Reserve(_) => {
-                ActorTransportFailure::MutationUncertain
-            }
+            MemoryCommand::OwnerBatch(_) => ActorTransportFailure::MutationUncertain,
         };
         self.actor.ask(command).await.map_err(|_| failure)
     }
@@ -211,12 +228,21 @@ impl ReservationControlled for MemoryPort {
         if self.actor.id() != prepared.target.actor.id() {
             return Err(ActorTransportFailure::WrongActor);
         }
-        let pending = self
-            .actor
-            .ask(MemoryCommand::Reserve(prepared.target.request.clone()))
-            .enqueue()
+        let (reply, pending) = oneshot::channel();
+        self.actor
+            .tell(ReserveDispatch {
+                request: prepared.target.request.clone(),
+                reply,
+            })
+            .send()
             .await
-            .map_err(|_| ActorTransportFailure::MutationUncertain)?;
+            .map_err(|error| match error {
+                kameo::error::SendError::ActorNotRunning(_)
+                | kameo::error::SendError::ActorRestarting(_)
+                | kameo::error::SendError::MailboxFull(_)
+                | kameo::error::SendError::Timeout(_) => ActorTransportFailure::NotAdmitted,
+                _ => ActorTransportFailure::MutationUncertain,
+            })?;
         Ok(ReservationSubmission {
             ticket: OrderedReservation {
                 target: prepared.target,
@@ -298,7 +324,7 @@ impl MemoryRestartable for MemoryPort {
     async fn restart(&self) -> Result<RecoveredMemory, StoreFailure> {
         let _ = self.actor.stop_gracefully().await;
         self.actor.wait_for_shutdown().await;
-        let store = MemoryStore::open(self.layout.clone())?;
+        let store = MemoryStore::reopen(self.layout.clone(), &self.anchor)?;
         Ok(RecoveredMemory {
             old_actor_id: self.actor.id(),
             port: MemoryPort::from(store),

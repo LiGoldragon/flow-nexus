@@ -64,3 +64,9 @@ The internal Memory actor now accepts expected-counter Reserve commands, committ
 Plain absence observations return Pending. A private-field ticket minted only after Kameo enqueue enables ordered final resolution on that actor. RecoveredMemory is produced only after old-actor shutdown and reopening the retained canonical store layout; its resolution accepts targets bound to the old actor only. Prepared dispatch is single-consumer and observation targets cannot dispatch. on_stop drops Memory before shutdown is announced. No separate reply/correlation records are persisted.
 
 This is a compiled candidate pending independent concurrency/lost-reply/restart tests. It neither mints OS-random FlowIds nor launches effects nor grants imported witness authority. Reservation evidence begins Uncertain, not a fabricated absence proof. Entropy/mint retry, admission/end allocator operations and authenticated serving remain work.
+
+## Approved reply composition correction
+
+Primary22131 authorizes a single private ReserveDispatch path through typed Kameo tell.send and ephemeral oneshot reply. Generic Reserve dispatch is removed. Confirmed enqueue mints the same incarnation/payload-bound ticket; receiver cancellation cannot undo a commit or panic the handler. Closed/rejected mailbox admission carries typed NotAdmitted; cancellation while sending remains uncertain. The old91b032a stopped-actor panic regression is preserved separately.
+
+Recovered capability now also checks retained kernel file identity, not path text alone: an open file anchor holds device/inode across old-actor shutdown, and reopening checks identity before/after acquiring Memory's exclusive store. A replaced file refuses IdentityChanged. This is trusted-host evidence, not isolation against hostile same-UID path manipulation. Real deployment/namespace and additional enqueue cancellation/death-boundary scenarios remain separate acceptance.

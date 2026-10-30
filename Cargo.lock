@@ -89,6 +89,7 @@ dependencies = [
  "kameo",
  "memory",
  "rkyv",
+ "tokio",
 ]
 
 [[package]]

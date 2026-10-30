@@ -1,7 +1,7 @@
 //! Typed durable rows, committed as one transaction by the single owning Memory actor.
 use crate::state::{Keyed, Mutatable, RecordState, Validatable};
 use flow_nexus_types::evidence::{Invariant, MutationBatch, ReadSelector, Record, RecordKey};
-use std::{fmt, path::PathBuf};
+use std::{fmt, fs::File, os::unix::fs::MetadataExt, path::PathBuf, sync::Arc};
 
 #[derive(Clone)]
 pub struct TableName(pub &'static str);
@@ -13,12 +13,29 @@ pub struct StoreLayout {
 }
 pub struct MemoryStore {
     layout: StoreLayout,
+    anchor: StoreAnchor,
     kernel: memory::Memory,
     table: memory::Table<&'static [u8], Record>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct StoreDevice(u64);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct StoreInode(u64);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct StoreIdentity {
+    device: StoreDevice,
+    inode: StoreInode,
+}
+/// Held open across actor replacement so the observed file identity cannot be reused.
+#[derive(Clone)]
+pub struct StoreAnchor {
+    file: Arc<File>,
+    identity: StoreIdentity,
 }
 #[derive(Debug)]
 pub enum StoreFailure {
     Closed,
+    IdentityChanged,
     Kernel(memory::Error),
     Archive(rkyv::rancor::Error),
     CorruptKey,
@@ -73,8 +90,14 @@ impl Openable for MemoryStore {
         kernel.write(|transaction| table.ensure(transaction))?;
         let mut layout = layout;
         layout.path = std::fs::canonicalize(&layout.path).map_err(StoreFailure::FileSystem)?;
+        let file = File::open(&layout.path).map_err(StoreFailure::FileSystem)?;
+        let identity = file.identity()?;
         let store = Self {
             layout,
+            anchor: StoreAnchor {
+                file: Arc::new(file),
+                identity,
+            },
             kernel,
             table,
         };
@@ -158,5 +181,54 @@ impl LayoutBearing for MemoryStore {
     type Layout = StoreLayout;
     fn layout(&self) -> StoreLayout {
         self.layout.clone()
+    }
+}
+
+trait FileIdentifiable {
+    type Identity;
+    type Failure;
+    fn identity(&self) -> Result<Self::Identity, Self::Failure>;
+}
+impl FileIdentifiable for File {
+    type Identity = StoreIdentity;
+    type Failure = StoreFailure;
+    fn identity(&self) -> Result<StoreIdentity, StoreFailure> {
+        let metadata = self.metadata().map_err(StoreFailure::FileSystem)?;
+        Ok(StoreIdentity {
+            device: StoreDevice(metadata.dev()),
+            inode: StoreInode(metadata.ino()),
+        })
+    }
+}
+pub trait StoreAnchored {
+    type Anchor;
+    fn anchor(&self) -> Self::Anchor;
+}
+impl StoreAnchored for MemoryStore {
+    type Anchor = StoreAnchor;
+    fn anchor(&self) -> StoreAnchor {
+        self.anchor.clone()
+    }
+}
+pub trait Reopenable: Sized {
+    type Layout;
+    type Anchor;
+    type Failure;
+    fn reopen(layout: Self::Layout, anchor: &Self::Anchor) -> Result<Self, Self::Failure>;
+}
+impl Reopenable for MemoryStore {
+    type Layout = StoreLayout;
+    type Anchor = StoreAnchor;
+    type Failure = StoreFailure;
+    fn reopen(layout: StoreLayout, anchor: &StoreAnchor) -> Result<Self, StoreFailure> {
+        let file = File::open(&layout.path).map_err(StoreFailure::FileSystem)?;
+        if anchor.file.identity()? != anchor.identity || file.identity()? != anchor.identity {
+            return Err(StoreFailure::IdentityChanged);
+        }
+        let store = Self::open(layout)?;
+        if store.anchor.identity != anchor.identity {
+            return Err(StoreFailure::IdentityChanged);
+        }
+        Ok(store)
     }
 }
