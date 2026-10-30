@@ -2,8 +2,8 @@
 use crate::store::{MemoryStore, Readable, StoreFailure, Writable};
 use flow_nexus_types::State;
 use flow_nexus_types::evidence::{
-    Mutation, MutationBatch, Record, ReservationOutcome, ReservationResolution, ReserveLaunch,
-    ResourceEvidence, Uncertain_Data,
+    Invariant, Mutation, MutationBatch, Record, RecordKey, ReservationOutcome,
+    ReservationResolution, ReserveLaunch, ResourceEvidence, Uncertain_Data,
 };
 use flow_nexus_types::memory::{AddressReservation, LaunchAttempt, RequestAllocator};
 
@@ -39,6 +39,51 @@ impl Reservable for MemoryStore {
             return Ok(ReservationOutcome::CounterAdvanced(
                 allocator.request_id.clone(),
             ));
+        }
+        let configuration = match state.records.iter().find_map(|record| match record {
+            Record::ConfigurationRecord(row) => Some(&row.configuration),
+            _ => None,
+        }) {
+            Some(configuration) => configuration,
+            None => return Ok(ReservationOutcome::ConfigurationUnavailable),
+        };
+        let resolved = &request.resolved_launch;
+        if !configuration
+            .declaration_vector
+            .contains(&resolved.declaration)
+            || !configuration
+                .layer_assignment_vector
+                .iter()
+                .any(|assignment| {
+                    assignment.aspect == resolved.declaration.address.aspect
+                        && assignment.layer == resolved.declaration.address.layer
+                        && assignment.model_profile_name
+                            == resolved.model_profile.model_profile_name
+                })
+            || !configuration
+                .model_profile_vector
+                .contains(&resolved.model_profile)
+            || !configuration
+                .harness_profile_vector
+                .contains(&resolved.harness_profile)
+            || configuration.identity_policy != resolved.identity_policy
+            || configuration.capsule_configuration != resolved.capsule_configuration
+            || resolved.module_content_vector.len() != resolved.declaration.module_id_vector.len()
+            || resolved
+                .declaration
+                .module_id_vector
+                .iter()
+                .zip(&resolved.module_content_vector)
+                .any(|(id, content)| {
+                    content.module_id != *id
+                        || !configuration.module_source_vector.iter().any(|source| {
+                            source.module_id == *id && source.module_kind == content.module_kind
+                        })
+                })
+        {
+            return Ok(ReservationOutcome::Refused(Invariant::SnapshotMismatch(
+                RecordKey::LaunchAttempt(request.request_id.clone()),
+            )));
         }
         if state.records.iter().any(|record| match record {
             Record::Flow(row) => row.flow_id == request.flow_id,

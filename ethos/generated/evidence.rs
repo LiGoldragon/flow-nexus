@@ -303,6 +303,14 @@ pub enum RecordKey {
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum InitializationOutcome {
+    Initialized,
+    ExistingState,
+    Refused(Invariant),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub struct ReserveLaunch {
     pub request_id: RequestId,
     pub flow_id: crate::FlowId,
@@ -320,6 +328,7 @@ pub enum ReservationOutcome {
     CounterAdvanced(RequestId),
     CounterOverflow,
     AllocatorUnavailable,
+    ConfigurationUnavailable,
     Refused(Invariant),
 }
 #[rustfmt::skip]

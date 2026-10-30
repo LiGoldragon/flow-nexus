@@ -1,5 +1,6 @@
 //! Serialized Memory commands and sealed reservation ordering/lifecycle capabilities.
 use crate::{
+    bootstrap::Initializable,
     reservation::{Reservable, ReservationResolvable},
     store::{
         LayoutBearing, MemoryStore, Readable, Reopenable, StoreAnchor, StoreAnchored, StoreFailure,
@@ -7,8 +8,8 @@ use crate::{
     },
 };
 use flow_nexus_types::evidence::{
-    Invariant, MutationBatch, ReadSelector, Record, ReservationOutcome, ReservationResolution,
-    ReserveLaunch,
+    InitializationOutcome, Invariant, MutationBatch, ReadSelector, Record, ReservationOutcome,
+    ReservationResolution, ReserveLaunch,
 };
 use kameo::{
     actor::{Actor, ActorId, ActorRef, Spawn, WeakActorRef},
@@ -20,12 +21,14 @@ use tokio::sync::oneshot;
 
 #[derive(Clone, Debug)]
 pub enum MemoryCommand {
+    InitializeConfiguration(flow_nexus_types::memory::ConfigurationRecord),
     Read(ReadSelector),
     OwnerBatch(MutationBatch),
     ResolveReservation(ReserveLaunch),
 }
 #[derive(Debug)]
 pub enum MemoryReply {
+    Initialization(InitializationOutcome),
     Records(Vec<Record>),
     Committed,
     Rejected(Invariant),
@@ -107,6 +110,12 @@ impl Message<MemoryCommand> for MemoryActor {
             return Ok(MemoryReply::StoreFailed(StoreFailure::Closed));
         };
         Ok(match command {
+            MemoryCommand::InitializeConfiguration(configuration) => {
+                match store.initialize(&configuration) {
+                    Ok(outcome) => MemoryReply::Initialization(outcome),
+                    Err(error) => MemoryReply::StoreFailed(error),
+                }
+            }
             MemoryCommand::Read(selector) => match store.read(&selector) {
                 Ok(records) => MemoryReply::Records(records),
                 Err(error) => MemoryReply::StoreFailed(error),
@@ -184,7 +193,9 @@ impl MemoryAccessible for MemoryPort {
             MemoryCommand::Read(_) | MemoryCommand::ResolveReservation(_) => {
                 ActorTransportFailure::ReadUnavailable
             }
-            MemoryCommand::OwnerBatch(_) => ActorTransportFailure::MutationUncertain,
+            MemoryCommand::OwnerBatch(_) | MemoryCommand::InitializeConfiguration(_) => {
+                ActorTransportFailure::MutationUncertain
+            }
         };
         self.actor.ask(command).await.map_err(|_| failure)
     }
@@ -361,5 +372,16 @@ impl RecoveredResolvable for RecoveredMemory {
             .ask(ResolveFinal(target.request.clone()))
             .await
             .map_err(|_| ActorTransportFailure::ReadUnavailable)
+    }
+}
+
+/// Internal lifecycle control; no ordinary/meta socket exposes this capability.
+pub trait MemoryInterruptible {
+    fn interrupt(&self) -> impl Future<Output = ()> + Send;
+}
+impl MemoryInterruptible for MemoryPort {
+    async fn interrupt(&self) {
+        self.actor.kill();
+        self.actor.wait_for_shutdown().await;
     }
 }
