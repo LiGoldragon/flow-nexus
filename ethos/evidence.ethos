@@ -2,6 +2,7 @@ Library
 [ :crate:[ Address FlowId SessionId Declaration ModuleContent NamespaceIdentity HerdrSocketPath HerdrSessionName ModelProfile HarnessProfile IdentityPolicy CapsuleConfiguration Request State TranscriptPath ModelIdentifier Tokens Configuration Threshold RecordHook Observation ]
   :crate:memory:[ ProcessBinding LaunchAttempt EndAttempt Permaflow Flow Queue ConfigurationRecord AddressReservation Verification RequestAllocator ArrivalAllocator ] ] ; imports: domain values and stored rows
 [ RequestId.Integer
+  OriginAdmissionId.RequestId
   HostBootIdentity.String                                      ; process incarnation
   PidNamespaceIdentity.String
   ProcessId.Integer
@@ -41,7 +42,7 @@ Library
   MutationBatch.Vector<Mutation>                                      ; one transaction
   ReadSelector.[ All ByKey.RecordKey ]                                ; typed projection selector
   ReconciliationTarget.VerificationTarget                              ; verification request
-  Invariant.[ DanglingReference.RecordKey DuplicateIdentity.FlowId DuplicateAddress.Address HistoryOwnership.FlowId PredecessorCycle.FlowId PredecessorAddress.FlowId QueueOrder.Address AttemptReservation.RecordKey SnapshotMismatch.RecordKey UnresolvedEffect.RecordKey LiveResource.RecordKey ReconciliationRequired.VerificationTarget DuplicateMutation.RecordKey AmbiguousReference.RecordKey DuplicateRequest.RequestId CounterRegression.RecordKey CounterOverflow.RecordKey AllocationStateRequired.RecordKey StoreRelocation ] ; typed violation
+  Invariant.[ DanglingReference.RecordKey DuplicateIdentity.FlowId DuplicateAddress.Address HistoryOwnership.FlowId PredecessorCycle.FlowId PredecessorAddress.FlowId QueueOrder.Address AttemptReservation.RecordKey SnapshotMismatch.RecordKey UnresolvedEffect.RecordKey LiveResource.RecordKey ReconciliationRequired.VerificationTarget DuplicateMutation.RecordKey AmbiguousReference.RecordKey DuplicateRequest.RequestId CounterRegression.RecordKey CounterOverflow.RecordKey AllocationStateRequired.RecordKey InvalidAlphabet DanglingAdmission.OriginAdmissionId StoreRelocation ] ; typed violation
 ] ; types
 [] ; traits: compatible behavior is implemented after the root-capability contract is settled
 [] ; associations

@@ -1,10 +1,10 @@
 Memory
 [ :crate:[ Address FlowId SessionId State TranscriptPath Configuration ]
-  :crate:evidence:[ RequestId ProcessIncarnation ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase EndPhase AdmittedRequest VerificationTarget VerificationState MetaConfigureOccurred ArrivalOrdinal ContentFingerprint HostBootIdentity PidNamespaceIdentity ] ] ; imports: record fields and evidence
+  :crate:evidence:[ RequestId OriginAdmissionId ProcessIncarnation ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase EndPhase AdmittedRequest VerificationTarget VerificationState MetaConfigureOccurred ArrivalOrdinal ContentFingerprint HostBootIdentity PidNamespaceIdentity ] ] ; imports: record fields and evidence
 [ ConfigurationRecord.{ Configuration MetaConfigureOccurred } ; configuration metadata
   AddressReservation.{ Address FlowId RequestId }                       ; address reservation
   ProcessBinding.{ FlowId ProcessIncarnation }                          ; process binding
-  LaunchAttempt.{ RequestId FlowId Address ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase } ; launch attempt
+  LaunchAttempt.{ RequestId FlowId Address Option<OriginAdmissionId> ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase } ; launch attempt
   EndAttempt.{ RequestId FlowId EndPhase }                               ; end attempt
   Permaflow.{ Address Vector<FlowId> }                                   ; permaflow
   Flow.{ FlowId Address Option<SessionId> State Option<FlowId> Option<TranscriptPath> } ; flow

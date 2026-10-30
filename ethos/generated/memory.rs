@@ -33,6 +33,9 @@ pub struct LaunchAttempt {
     pub request_id: crate::evidence::RequestId,
     pub flow_id: crate::FlowId,
     pub address: crate::Address,
+    pub origin_admission_id_option: std::option::Option<
+        crate::evidence::OriginAdmissionId,
+    >,
     pub resolved_launch: crate::evidence::ResolvedLaunch,
     pub resource_evidence: crate::evidence::ResourceEvidence,
     pub creation_intent: crate::evidence::CreationIntent,

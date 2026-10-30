@@ -1,4 +1,5 @@
 //! Owner-batch candidate validation. No external effect or authority is created here.
+use crate::coherence::EvidenceCoherent;
 use flow_nexus_types::State;
 use flow_nexus_types::evidence::{
     EndPhase, Invariant, LaunchPhase, Mutation, MutationBatch, Record, RecordKey,
@@ -132,6 +133,7 @@ impl Validatable for RecordState {
         }
         self.validate_configuration(previous)?;
         self.validate_references()?;
+        self.validate_evidence()?;
         self.validate_ownership()?;
         self.validate_allocators(previous)?;
         self.validate_verification()?;
@@ -159,6 +161,14 @@ impl Validatable for RecordState {
             return Ok(());
         };
         let c = &row.configuration;
+        let alphabet = c.identity_policy.identity_alphabet.0.as_bytes();
+        if alphabet.len() < 2
+            || alphabet.iter().enumerate().any(|(index, value)| {
+                !value.is_ascii_alphanumeric() || alphabet[..index].contains(value)
+            })
+        {
+            return Err(Invariant::InvalidAlphabet);
+        }
         let mut addresses = Vec::new();
         for declaration in &c.declaration_vector {
             if addresses.contains(&declaration.address) {
@@ -311,6 +321,14 @@ impl Validatable for RecordState {
                         }
                         _ => {}
                     }
+                    if let Some(origin) = &v.origin_admission_id_option {
+                        let found = self.records.iter().any(|row| matches!(row,
+                            Record::Queue(queue) if queue.address == v.address
+                                && queue.admitted_request_vector.iter().any(|admission| admission.request_id == origin.0)));
+                        if !found {
+                            return Err(Invariant::DanglingAdmission(origin.clone()));
+                        }
+                    }
                     if v.address != v.resolved_launch.declaration.address
                         || v.resolved_launch.model_profile.harness_profile_name
                             != v.resolved_launch.harness_profile.harness_profile_name
@@ -440,7 +458,7 @@ impl Validatable for RecordState {
                 return Err(Invariant::CounterRegression(key.clone()));
             }
         }
-        let mut queued_ids = Vec::new();
+        let mut logical_ids = Vec::new();
         for record in &self.records {
             let request_id = match record {
                 Record::LaunchAttempt(v) => Some(&v.request_id),
@@ -448,12 +466,12 @@ impl Validatable for RecordState {
                 Record::AddressReservation(v) => Some(&v.request_id),
                 _ => None,
             };
-            if let Record::EndAttempt(end) = record {
-                if self
-                    .record(&RecordKey::LaunchAttempt(end.request_id.clone()))
-                    .is_some()
-                {
-                    return Err(Invariant::DuplicateRequest(end.request_id.clone()));
+            if matches!(record, Record::LaunchAttempt(_) | Record::EndAttempt(_)) {
+                if let Some(id) = request_id {
+                    if logical_ids.contains(id) {
+                        return Err(Invariant::DuplicateRequest(id.clone()));
+                    }
+                    logical_ids.push(id.clone());
                 }
             }
             if let Some(id) = request_id {
@@ -477,10 +495,10 @@ impl Validatable for RecordState {
                         return Err(Invariant::QueueOrder(queue.address.clone()));
                     }
                     last = Some(admitted.arrival_ordinal.0);
-                    if queued_ids.contains(&admitted.request_id) {
+                    if logical_ids.contains(&admitted.request_id) {
                         return Err(Invariant::DuplicateRequest(admitted.request_id.clone()));
                     }
-                    queued_ids.push(admitted.request_id.clone());
+                    logical_ids.push(admitted.request_id.clone());
                     let n = next.ok_or_else(|| Invariant::AllocationStateRequired(key.clone()))?;
                     if admitted.request_id.0 < 0 || admitted.request_id.0 >= n {
                         return Err(Invariant::CounterRegression(key.clone()));
