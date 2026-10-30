@@ -16,7 +16,15 @@
         root = ./.;
         extraFilters = [ (path: type: type == "regular" && pkgs.lib.hasSuffix ".ethos" path) ];
       };
-      common = { inherit src; strictDeps = true; doCheck = false; };
+      common = {
+        inherit src;
+        pname = "flow-nexus-anatomy";
+        version = "1.0.0";
+        strictDeps = true;
+        doCheck = false;
+        cargoArtifacts = null;
+        doInstallCargoArtifacts = false;
+      };
     in {
       packages.${system}.default = rust.craneLib.cargoBuild common;
       checks.${system}.datom = rust.craneLib.cargoBuild (common // { cargoExtraArgs = "--locked --all-features"; });

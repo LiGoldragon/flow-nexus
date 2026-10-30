@@ -22,4 +22,13 @@ This repository started empty. No Flow v0 source, contract, Capsule adapter or f
 - A typed meta Debug projection; the query exists and must return Unavailable until implemented.
 - Real isolated harness proof and independent acceptance tests at immutable revisions.
 
-Cross-metaflow runtime messaging follows standalone v1 proof. Send and Refresh are later boundaries. No runtime operation is presently implemented; no success receipt is emitted by this checkpoint. v0 remains unchanged. There is no configured remote yet, so these initial local repositories cannot be pushed until their remote destination is provisioned.
+Cross-metaflow runtime messaging follows standalone v1 proof. Send and Refresh are later boundaries. No runtime operation is presently implemented; no success receipt is emitted by this checkpoint. v0 remains unchanged. The three public remotes have been provisioned and their initial root commits pushed non-force. Nix compilation passed for the initial main anatomy with and without Datom, and both wire crates with Datom. This does not prove the revised configuration/evidence schemas, the newer Input/Output naming and implied traits, runtime behavior or the complete infrastructure closure.
+
+## Initial build witnesses
+
+- Main without Datom: `/nix/store/kjs9wl0mhgs82brc4rgz0g3mxr45hjwh-flow-nexus-anatomy-build-1.0.0`
+- Main with Datom: `/nix/store/m1vv5s79yblas0riyq500rsa1yb86i6w-flow-nexus-anatomy-build-1.0.0`
+- Ordinary wire with Datom: `/nix/store/0w08dz83jzyzy3w6sp60nh63d0612lxy-signal-flow-nexus-anatomy-build-1.0.0`
+- Meta wire with Datom: `/nix/store/mc1wpfajxmrkpa619vsnyccawgf4nzjs-meta-signal-flow-nexus-anatomy-build-1.0.0`
+
+These are compilation witnesses, not independent scenario tests. New Translator and implied-trait drafts are not implemented. The pinned generator emits the older Query/Response projection; adopting the new Input/Output/root-capability contract requires the upstream approved generator.
