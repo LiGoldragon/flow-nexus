@@ -13,3 +13,5 @@ pub mod coherence;
 pub mod reservation;
 
 pub mod bootstrap;
+
+pub mod identity;
