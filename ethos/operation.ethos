@@ -1,12 +1,29 @@
 Operation
-[ :flow_nexus_types:[ Address Remembering Brief Declaration FlowId Request Capsule ] ] ; imports
-[ Start.{ Address Remembering Brief Declaration }      ; operations: launch, then end; delivery and replacement later
+[ :flow_nexus_types:[ Address Remembering FlowId Brief Configuration Declaration Request Threshold RecordHook Observation State SessionId ]
+  :flow_nexus_types:evidence:DebugProjection ] ; imports: typed operation vocabulary
+[ Configure.Configuration
+  Declare.Declaration
+  Threshold.Threshold
+  RecordHook.RecordHook
+  Observe.Address
+  Debug
+  Reconcile.FlowId
+  Start.{ Address Remembering Brief Declaration } ; start
   Stop.FlowId
-  Deliver.{ FlowId Request }
-  Enqueue.{ Address Request }
+  Deliver.{ FlowId Request } ; deliver
+  Enqueue.{ Address Request } ; enqueue
   Replace.FlowId ]
-[ Started.FlowId                                      ; outcomes: success only after the matching witness and commit
-  Stopped Delivered Enqueued Replaced.FlowId
-  Failed.[ CapsuleRefused HarnessRefused StoreRefused
-           RecoveryRequired Unavailable ] ]
-[]                                                    ; additional types
+[ Configured
+  Declared
+  ThresholdSet
+  HookRecorded
+  Observed.Vector<Observation>
+  Debugged.DebugProjection
+  Reconciled
+  Started.FlowId
+  Stopped
+  Delivered
+  Enqueued
+  Replaced.FlowId
+  Failed.[ ConfigurationRefused DeclarationRefused ThresholdRefused HookRefused ObservationRefused DebugRefused ReconciliationRefused CapsuleRefused HarnessRefused StoreRefused RecoveryRequired Unavailable ] ] ; failed
+[]                                      ; additional types

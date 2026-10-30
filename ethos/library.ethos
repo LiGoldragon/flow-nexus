@@ -1,32 +1,59 @@
 Library
 []                                                    ; imports
-[ FlowId.String                                       ; types: Nexus-minted six-character identity
-  SessionId.String                                    ;   harness identity, independent of FlowId
+[ FlowId.String
+  SessionId.String
   Topic.String
-  Aspect.[ Psyche Mind Field ]
-  Layer.[ Primary Secondary Tertiary Quaternary ]
-  Address.{ Aspect Topic Layer }                      ;   the local permaflow address
+  Aspect.[ Psyche Mind Field ] ; aspect
+  Layer.[ Primary Secondary Tertiary Quaternary ] ; layer
+  Address.{ Aspect Topic Layer } ; address
   Remembering.String
   Brief.String
+  Request.[ Order.String Question.String Words.String Result.String Notice.String ] ; request
   ModuleId.String
+  ModuleKind.[ Spirit Intent Vision Knowledge Role ] ; module kind
+  ModuleSourcePath.String
+  ModuleSource.{ ModuleId ModuleKind ModuleSourcePath } ; module source
+  ModuleContent.{ ModuleId ModuleKind ModuleContentText.String } ; module content
   HarnessModuleName.String
-  Model.String
+  ToolName.String
+  HarnessModule.{ HarnessModuleName Option<ToolName> HarnessModuleText.String } ; harness module
+  ModelProfileName.String
+  HarnessProfileName.String
+  ModelIdentifier.String
+  HarnessVersion.String
+  ExecutablePath.String
   Tokens.Integer
-  Request.[ Order.String Question.String              ;   the closed request vocabulary
-            Words.String Result.String Notice.String ]
-  Declaration.{ Address Vector<ModuleId>               ;   belief modules and blacklist
-                Vector<HarnessModuleName> }
-  State.[ Started Working Idle Ended ]
-  TranscriptPath.String
-  ProcessId.Integer
-  ProcessStart.Integer
-  ProcessBinding.{ ProcessId ProcessStart FlowId }     ;   incarnation, not PID alone
-  Pane.String
-  Home.String
-  Capsule.{ Home Pane }
+  LayerAssignment.{ Aspect Layer ModelProfileName } ; layer assignment
+  ModelProfile.{ ModelProfileName ModelIdentifier HarnessProfileName Tokens } ; model profile
+  PermissionMode.[ AcceptEdits Auto BypassPermissions Manual DontAsk Plan ] ; permission mode
+  SettingSource.[ User Project Local ] ; setting source
+  HookExecutablePath.String
+  HookEvent.[ SessionStart UserPromptSubmit Stop SessionEnd PermissionRequest ] ; hook event
+  HookConfiguration.{ HookExecutablePath Vector<HookEvent> } ; hook configuration
+  ClaudeSettings.{ PermissionMode Vector<SettingSource> HookConfiguration } ; claude settings
+  HarnessSettings.[ ClaudeCode.ClaudeSettings CodexUnavailable ] ; harness settings
+  HarnessProfile.{ HarnessProfileName HarnessVersion ExecutablePath Vector<HarnessModule> HarnessSettings } ; harness profile
   MetaflowName.String
-  SocketPath.String
-  Peer.{ MetaflowName SocketPath }
-  Holder.[ Local Peer ] ]                             ;   one declared holder per address
-[]                                                    ; traits: behavior follows in the implementation pass
+  OrdinarySocketPath.String
+  MetaSocketPath.String
+  MemoryPath.String
+  SocketConfiguration.{ OrdinarySocketPath MetaSocketPath } ; socket configuration
+  Declaration.{ Address Vector<ModuleId> Vector<HarnessModuleName> } ; declaration
+  IdentityAlphabet.String
+  IdentityPolicy.{ IdentityAlphabet } ; identity policy
+  HomePath.String
+  TranscriptDirectory.String
+  WorkingDirectory.String
+  HerdrExecutablePath.String
+  HerdrSocketPath.String
+  HerdrSessionName.String
+  NamespaceIdentity.String
+  CapsuleConfiguration.{ HomePath TranscriptDirectory WorkingDirectory HerdrExecutablePath HerdrSocketPath HerdrSessionName NamespaceIdentity } ; capsule configuration
+  State.[ Started Working Idle Ended ] ; state
+  TranscriptPath.String
+  Threshold.{ ModelIdentifier Tokens } ; threshold
+  RecordHook.{ FlowId Option<SessionId> State } ; record hook
+  Observation.{ Address FlowId State } ; observation
+  Configuration.{ MetaflowName MemoryPath SocketConfiguration Vector<Declaration> Vector<LayerAssignment> Vector<ModelProfile> Vector<HarnessProfile> Vector<ModuleSource> IdentityPolicy CapsuleConfiguration } ] ; configuration
+[]                                                    ; traits
 []                                                    ; associations

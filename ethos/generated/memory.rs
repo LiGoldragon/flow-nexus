@@ -7,62 +7,52 @@
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
-pub struct RequestId(pub i64);
-#[rustfmt::skip]
-#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
-pub enum Phase {
-    Reserved,
-    Prepared,
-    Released,
-    Cleanup,
-    RecoveryRequired,
-    Complete,
-}
-#[rustfmt::skip]
-#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
-pub struct Flow {
-    pub flow_id: flow_nexus_types::FlowId,
-    pub address: flow_nexus_types::Address,
-    pub session_id_option: std::option::Option<flow_nexus_types::SessionId>,
-    pub state: flow_nexus_types::State,
-    pub flow_id_option: std::option::Option<flow_nexus_types::FlowId>,
-    pub transcript_path_option: std::option::Option<flow_nexus_types::TranscriptPath>,
+pub struct ProcessBinding {
+    pub flow_id: crate::FlowId,
+    pub process_incarnation: crate::evidence::ProcessIncarnation,
 }
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub struct LaunchAttempt {
-    pub request_id: RequestId,
-    pub address: flow_nexus_types::Address,
-    pub declaration: flow_nexus_types::Declaration,
-    pub remembering: flow_nexus_types::Remembering,
-    pub brief: flow_nexus_types::Brief,
-    pub phase: Phase,
-    pub flow_id_option: std::option::Option<flow_nexus_types::FlowId>,
-    pub capsule_option: std::option::Option<flow_nexus_types::Capsule>,
-    pub process_binding_option: std::option::Option<flow_nexus_types::ProcessBinding>,
+    pub request_id: crate::evidence::RequestId,
+    pub flow_id: crate::FlowId,
+    pub address: crate::Address,
+    pub resolved_launch: crate::evidence::ResolvedLaunch,
+    pub resource_evidence: crate::evidence::ResourceEvidence,
+    pub creation_intent: crate::evidence::CreationIntent,
+    pub launch_phase: crate::evidence::LaunchPhase,
 }
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub struct EndAttempt {
-    pub request_id: RequestId,
-    pub flow_id: flow_nexus_types::FlowId,
-    pub phase: Phase,
+    pub request_id: crate::evidence::RequestId,
+    pub flow_id: crate::FlowId,
+    pub end_phase: crate::evidence::EndPhase,
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct Permaflow {
+    pub address: crate::Address,
+    pub flow_id_vector: std::vec::Vec<crate::FlowId>,
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct Flow {
+    pub flow_id: crate::FlowId,
+    pub address: crate::Address,
+    pub session_id_option: std::option::Option<crate::SessionId>,
+    pub state: crate::State,
+    pub flow_id_option: std::option::Option<crate::FlowId>,
+    pub transcript_path_option: std::option::Option<crate::TranscriptPath>,
 }
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub struct Queue {
-    pub address: flow_nexus_types::Address,
-    pub request_vector: std::vec::Vec<flow_nexus_types::Request>,
-}
-#[rustfmt::skip]
-#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
-pub enum Answer {
-    Succeeded,
-    Failed,
+    pub address: crate::Address,
+    pub admitted_request_vector: std::vec::Vec<crate::evidence::AdmittedRequest>,
 }

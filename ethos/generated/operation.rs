@@ -31,6 +31,13 @@ pub struct Enqueue_Data {
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Operation {
+    Configure(flow_nexus_types::Configuration),
+    Declare(flow_nexus_types::Declaration),
+    Threshold(flow_nexus_types::Threshold),
+    RecordHook(flow_nexus_types::RecordHook),
+    Observe(flow_nexus_types::Address),
+    Debug,
+    Reconcile(flow_nexus_types::FlowId),
     Start(Start_Data),
     Stop(flow_nexus_types::FlowId),
     Deliver(Deliver_Data),
@@ -41,6 +48,13 @@ pub enum Operation {
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Failed_Data {
+    ConfigurationRefused,
+    DeclarationRefused,
+    ThresholdRefused,
+    HookRefused,
+    ObservationRefused,
+    DebugRefused,
+    ReconciliationRefused,
     CapsuleRefused,
     HarnessRefused,
     StoreRefused,
@@ -51,6 +65,13 @@ pub enum Failed_Data {
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Outcome {
+    Configured,
+    Declared,
+    ThresholdSet,
+    HookRecorded,
+    Observed(std::vec::Vec<flow_nexus_types::Observation>),
+    Debugged(flow_nexus_types::evidence::DebugProjection),
+    Reconciled,
     Started(flow_nexus_types::FlowId),
     Stopped,
     Delivered,

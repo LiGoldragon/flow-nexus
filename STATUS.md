@@ -32,3 +32,11 @@ Cross-metaflow runtime messaging follows standalone v1 proof. Send and Refresh a
 - Meta wire with Datom: `/nix/store/mc1wpfajxmrkpa619vsnyccawgf4nzjs-meta-signal-flow-nexus-anatomy-build-1.0.0`
 
 These are compilation witnesses, not independent scenario tests. New Translator and implied-trait drafts are not implemented. The pinned generator emits the older Query/Response projection; adopting the new Input/Output/root-capability contract requires the upstream approved generator.
+
+## Corrected anatomy checkpoint
+
+The shared Library now contains complete draft configuration and a separate evidence module. Memory declares durable Flow/Permaflow/binding/attempt/queue rows, rather than treating every helper scalar as a stored row. Launch and end have separate evidence-bearing phases; creation intent and locator precede external effects. Ordinary Configure uses the same shared Configuration as meta. Debug is a typed private projection. There are still no runtime bodies.
+
+Nix compiled the corrected main anatomy without and with Datom at `/nix/store/iznw4cj8mgp4lzci317hf91lqydpb97d-flow-nexus-anatomy-build-1.0.0` and `/nix/store/dz1dws13kc7b4y5mqppm6f83aig0sjnl-flow-nexus-anatomy-build-1.0.0`. Corrected ordinary/meta Datom builds are `/nix/store/zl1x25bb1wr8i6anq68k3paykrgg2rv2-signal-flow-nexus-anatomy-build-1.0.0` and `/nix/store/vjv3wq6mvh7czvk4rnrbx9mxklsg1ya8-meta-signal-flow-nexus-anatomy-build-1.0.0`.
+
+The separate schema test repository preserves two failures against the earlier immutable anatomy: supplied bare-string newtype forms in Launch and End conflict with the current structural derive projection. Compilation and self-roundtrip tests do not settle that interface. Primary is deciding the expected shape/upstream action. Complete typed meta batch mutations and authenticated entry bootstrap remain under review. Translator remains a design-only draft.

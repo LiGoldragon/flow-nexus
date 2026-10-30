@@ -1,13 +1,9 @@
 Memory
-[ :flow_nexus_types:[ FlowId Address SessionId State TranscriptPath ProcessBinding Declaration Remembering Brief Capsule Request ] ] ; imports
-[ RequestId.Integer                                   ; records: private, exposed only through meta Debug
-  Phase.[ Reserved Prepared Released Cleanup RecoveryRequired Complete ]
-  Flow.{ FlowId Address Option<SessionId> State         ;   harness may report its session after start
-         Option<FlowId> Option<TranscriptPath> }
-  LaunchAttempt.{ RequestId Address Declaration        ;   configuration and exact prompt inputs retained
-                  Remembering Brief Phase
-                  Option<FlowId> Option<Capsule>
-                  Option<ProcessBinding> }
-  EndAttempt.{ RequestId FlowId Phase }
-  Queue.{ Address Vector<Request> }
-  Answer.[ Succeeded Failed ] ]
+[ :crate:[ Address FlowId SessionId State TranscriptPath ]
+  :crate:evidence:[ RequestId ProcessIncarnation ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase EndPhase AdmittedRequest ] ] ; imports: record fields, defined once
+[ ProcessBinding.{ FlowId ProcessIncarnation } ; process binding
+  LaunchAttempt.{ RequestId FlowId Address ResolvedLaunch ResourceEvidence CreationIntent LaunchPhase } ; launch attempt
+  EndAttempt.{ RequestId FlowId EndPhase } ; end attempt
+  Permaflow.{ Address Vector<FlowId> } ; permaflow
+  Flow.{ FlowId Address Option<SessionId> State Option<FlowId> Option<TranscriptPath> } ; flow
+  Queue.{ Address Vector<AdmittedRequest> } ] ; records: exactly the durable row types
