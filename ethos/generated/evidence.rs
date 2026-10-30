@@ -303,6 +303,37 @@ pub enum RecordKey {
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub struct ReserveLaunch {
+    pub request_id: RequestId,
+    pub flow_id: crate::FlowId,
+    pub resolved_launch: ResolvedLaunch,
+    pub creation_intent: CreationIntent,
+    pub origin_admission_id_option: std::option::Option<OriginAdmissionId>,
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum ReservationOutcome {
+    Reserved(RequestId),
+    IdentityCollision(crate::FlowId),
+    AddressOccupied(crate::Address),
+    CounterAdvanced(RequestId),
+    CounterOverflow,
+    AllocatorUnavailable,
+    Refused(Invariant),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum ReservationResolution {
+    Pending,
+    Matched(crate::memory::LaunchAttempt),
+    Conflicting(Record),
+    AbsentFinal,
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Mutation {
     Put(Record),
     Remove(RecordKey),

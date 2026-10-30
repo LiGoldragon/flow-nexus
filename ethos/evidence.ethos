@@ -38,6 +38,9 @@ Library
   VerificationState.[ Unverified Verified.ReconciliationEvidence RecoveryRequired.ResourceEvidence ] ; verification state
    Record.[ ConfigurationRecord.ConfigurationRecord Flow.Flow Permaflow.Permaflow ProcessBinding.ProcessBinding LaunchAttempt.LaunchAttempt EndAttempt.EndAttempt AddressReservation.AddressReservation Queue.Queue Verification.Verification RequestAllocator.RequestAllocator ArrivalAllocator.ArrivalAllocator ] ; complete durable row kinds
   RecordKey.[ ConfigurationSingleton Flow.FlowId Permaflow.Address ProcessBinding.FlowId LaunchAttempt.RequestId EndAttempt.RequestId AddressReservation.Address Queue.Address Verification.VerificationTarget RequestAllocatorSingleton ArrivalAllocator.Address ] ; row identity
+  ReserveLaunch.{ RequestId FlowId ResolvedLaunch CreationIntent Option<OriginAdmissionId> } ; expected counter and immutable intended payload
+  ReservationOutcome.[ Reserved.RequestId IdentityCollision.FlowId AddressOccupied.Address CounterAdvanced.RequestId CounterOverflow AllocatorUnavailable Refused.Invariant ] ; definite transaction outcome
+  ReservationResolution.[ Pending Matched.LaunchAttempt Conflicting.Record AbsentFinal ] ; absence needs an actor ordering/lifecycle proof
   Mutation.[ Put.Record Remove.RecordKey ]                             ; atomic change
   MutationBatch.Vector<Mutation>                                      ; one transaction
   ReadSelector.[ All ByKey.RecordKey ]                                ; typed projection selector

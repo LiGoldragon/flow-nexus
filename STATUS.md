@@ -56,3 +56,11 @@ Nix compiled this internal slice without/with Datom at `/nix/store/0zvs0qzc632ai
 Source audit and separate immutable-target tests found that the first Memory slice accepted a FlowId reserved at two addresses, private RequestId shared by launch/end attempts, and a completed launch with no Flow row. The corrected validator retains FlowId/address claims across historical and pending rows, refuses repeated launch identities, checks completed launch references, and rejects launch/end request reuse. Independent tests failed on cd4a184 before this correction; their corrected-target results are recorded in the separate test repository.
 
 Primary21445/21446/21460/21473 decisions are now consumed: exact revision-bound verification, monotonic allocators, complete typed owner meta reads/writes, and OwnerLauncher policy. The policy is not an implemented credential/ancestry mechanism. Transparent Datom newtype form is settled by vision, not a pending design choice; the shared derive bug remains an upstream textual blocker. No Translator is built.
+
+## Atomic reservation and resolution candidate
+
+The internal Memory actor now accepts expected-counter Reserve commands, committing allocator advancement, launch attempt and address reservation together after validation. Definite counter mismatch, identity/address collision, missing allocator, overflow and invariant rejection are typed and make no change. Resolution compares the full immutable intended payload, not the private request id alone.
+
+Plain absence observations return Pending. A private-field ticket minted only after Kameo enqueue enables ordered final resolution on that actor. RecoveredMemory is produced only after old-actor shutdown and reopening the retained canonical store layout; its resolution accepts targets bound to the old actor only. Prepared dispatch is single-consumer and observation targets cannot dispatch. on_stop drops Memory before shutdown is announced. No separate reply/correlation records are persisted.
+
+This is a compiled candidate pending independent concurrency/lost-reply/restart tests. It neither mints OS-random FlowIds nor launches effects nor grants imported witness authority. Reservation evidence begins Uncertain, not a fabricated absence proof. Entropy/mint retry, admission/end allocator operations and authenticated serving remain work.

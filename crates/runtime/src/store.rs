@@ -3,22 +3,27 @@ use crate::state::{Keyed, Mutatable, RecordState, Validatable};
 use flow_nexus_types::evidence::{Invariant, MutationBatch, ReadSelector, Record, RecordKey};
 use std::{fmt, path::PathBuf};
 
+#[derive(Clone)]
 pub struct TableName(pub &'static str);
+#[derive(Clone)]
 pub struct StoreLayout {
     pub path: PathBuf,
     pub table_name: TableName,
     pub schema: memory::Schema,
 }
 pub struct MemoryStore {
+    layout: StoreLayout,
     kernel: memory::Memory,
     table: memory::Table<&'static [u8], Record>,
 }
 #[derive(Debug)]
 pub enum StoreFailure {
+    Closed,
     Kernel(memory::Error),
     Archive(rkyv::rancor::Error),
     CorruptKey,
     Integrity(Invariant),
+    FileSystem(std::io::Error),
 }
 impl fmt::Display for StoreFailure {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -66,7 +71,13 @@ impl Openable for MemoryStore {
         let kernel = memory::Memory::open_with_schema(&layout.path, &layout.schema)?;
         let table = memory::Table::new(layout.table_name.0);
         kernel.write(|transaction| table.ensure(transaction))?;
-        let store = Self { kernel, table };
+        let mut layout = layout;
+        layout.path = std::fs::canonicalize(&layout.path).map_err(StoreFailure::FileSystem)?;
+        let store = Self {
+            layout,
+            kernel,
+            table,
+        };
         let state = store.snapshot()?;
         state.validate(&state).map_err(StoreFailure::Integrity)?;
         Ok(store)
@@ -137,4 +148,15 @@ impl Writable for MemoryStore {
 struct StoredRow {
     key: Vec<u8>,
     record: Record,
+}
+
+pub trait LayoutBearing {
+    type Layout;
+    fn layout(&self) -> Self::Layout;
+}
+impl LayoutBearing for MemoryStore {
+    type Layout = StoreLayout;
+    fn layout(&self) -> StoreLayout {
+        self.layout.clone()
+    }
 }
