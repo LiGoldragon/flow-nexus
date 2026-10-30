@@ -8,6 +8,7 @@ pub enum EntropyFailure {
     Interrupted,
     Unavailable,
     OperatingSystem(i32),
+    InvalidReturn,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MintFailure {
@@ -146,5 +147,20 @@ impl IdentityCountable for RecordState {
             capacity: IdentityCapacity(capacity),
             occupied: OccupiedIdentities(occupied),
         })
+    }
+}
+
+// The platform crate owns the sole unsafe syscall boundary; runtime stays safe.
+impl EntropyReadable for flow_nexus_platform::LinuxEntropy {
+    fn read_entropy(&mut self, target: &mut [u8]) -> Result<usize, EntropyFailure> {
+        use flow_nexus_platform::{EntropyError, OsEntropyReadable};
+        OsEntropyReadable::read_entropy(self, target)
+            .map(|count| count.0)
+            .map_err(|error| match error {
+                EntropyError::Interrupted => EntropyFailure::Interrupted,
+                EntropyError::Unavailable => EntropyFailure::Unavailable,
+                EntropyError::OperatingSystem(errno) => EntropyFailure::OperatingSystem(errno.0),
+                EntropyError::InvalidReturn => EntropyFailure::InvalidReturn,
+            })
     }
 }
