@@ -50,3 +50,9 @@ Completed rules include duplicate batch keys, referential/history/predecessor ch
 The reservation/admission allocator operations, authenticated Operation/Signal actor entry, OwnerLauncher kernel ancestry classification, default seeding, live reconciliation, and launch/end effects remain separate work. Translator stays unbuilt. Source generation still uses the older upstream roots without claiming Input/Output/implied-trait conformance.
 
 Nix compiled this internal slice without/with Datom at `/nix/store/0zvs0qzc632aijbmqc2430r3ilfisrki-flow-nexus-anatomy-build-1.0.0` and `/nix/store/hcx1m1na2ispxj5jwczj5sxa3bgl791w-flow-nexus-anatomy-build-1.0.0`. This is compile evidence; independent Memory/actor scenarios are next.
+
+## Identity integrity correction
+
+Source audit and separate immutable-target tests found that the first Memory slice accepted a FlowId reserved at two addresses, private RequestId shared by launch/end attempts, and a completed launch with no Flow row. The corrected validator retains FlowId/address claims across historical and pending rows, refuses repeated launch identities, checks completed launch references, and rejects launch/end request reuse. Independent tests failed on cd4a184 before this correction; their corrected-target results are recorded in the separate test repository.
+
+Primary21445/21446/21460/21473 decisions are now consumed: exact revision-bound verification, monotonic allocators, complete typed owner meta reads/writes, and OwnerLauncher policy. The policy is not an implemented credential/ancestry mechanism. Transparent Datom newtype form is settled by vision, not a pending design choice; the shared derive bug remains an upstream textual blocker. No Translator is built.

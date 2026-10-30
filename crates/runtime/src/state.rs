@@ -300,6 +300,17 @@ impl Validatable for RecordState {
                     }
                 }
                 Record::LaunchAttempt(v) => {
+                    match self.record(&RecordKey::Flow(v.flow_id.clone())) {
+                        Some(Record::Flow(flow)) if flow.address != v.address => {
+                            return Err(Invariant::DuplicateIdentity(v.flow_id.clone()));
+                        }
+                        None if matches!(v.launch_phase, LaunchPhase::Complete) => {
+                            return Err(Invariant::DanglingReference(RecordKey::Flow(
+                                v.flow_id.clone(),
+                            )));
+                        }
+                        _ => {}
+                    }
                     if v.address != v.resolved_launch.declaration.address
                         || v.resolved_launch.model_profile.harness_profile_name
                             != v.resolved_launch.harness_profile.harness_profile_name
@@ -339,6 +350,41 @@ impl Validatable for RecordState {
         Ok(())
     }
     fn validate_ownership(&self) -> Result<(), Invariant> {
+        // A historical identity remains reserved even after its address becomes available.
+        let mut claims: Vec<IdentityClaim<'_>> = Vec::new();
+        let mut launches = Vec::new();
+        for record in &self.records {
+            let claim = match record {
+                Record::Flow(v) => Some(IdentityClaim {
+                    id: &v.flow_id,
+                    address: &v.address,
+                }),
+                Record::AddressReservation(v) => Some(IdentityClaim {
+                    id: &v.flow_id,
+                    address: &v.address,
+                }),
+                Record::LaunchAttempt(v) => {
+                    if launches.contains(&v.flow_id) {
+                        return Err(Invariant::DuplicateIdentity(v.flow_id.clone()));
+                    }
+                    launches.push(v.flow_id.clone());
+                    Some(IdentityClaim {
+                        id: &v.flow_id,
+                        address: &v.address,
+                    })
+                }
+                _ => None,
+            };
+            if let Some(claim) = claim {
+                if claims
+                    .iter()
+                    .any(|old| old.id == claim.id && old.address != claim.address)
+                {
+                    return Err(Invariant::DuplicateIdentity(claim.id.clone()));
+                }
+                claims.push(claim);
+            }
+        }
         // A flow and its own reservation describe one owner; distinct identities conflict.
         for record in &self.records {
             let owner = match record {
@@ -402,6 +448,14 @@ impl Validatable for RecordState {
                 Record::AddressReservation(v) => Some(&v.request_id),
                 _ => None,
             };
+            if let Record::EndAttempt(end) = record {
+                if self
+                    .record(&RecordKey::LaunchAttempt(end.request_id.clone()))
+                    .is_some()
+                {
+                    return Err(Invariant::DuplicateRequest(end.request_id.clone()));
+                }
+            }
             if let Some(id) = request_id {
                 let n = next.ok_or_else(|| Invariant::AllocationStateRequired(key.clone()))?;
                 if id.0 < 0 || id.0 >= n {
@@ -487,4 +541,9 @@ impl Validatable for RecordState {
         }
         Ok(())
     }
+}
+
+struct IdentityClaim<'a> {
+    id: &'a flow_nexus_types::FlowId,
+    address: &'a flow_nexus_types::Address,
 }
