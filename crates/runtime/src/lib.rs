@@ -1,0 +1,6 @@
+//! Flow v1 Operation and Memory anatomy. Runtime effects are not implemented yet.
+#![forbid(unsafe_code)]
+#[path = "../../../ethos/generated/operation.rs"]
+pub mod operation;
+#[path = "../../../ethos/generated/memory.rs"]
+pub mod memory;

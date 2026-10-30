@@ -1,0 +1,12 @@
+Operation
+[ :flow_nexus_types:[ Address Remembering Brief Declaration FlowId Request Capsule ] ] ; imports
+[ Start.{ Address Remembering Brief Declaration }      ; operations: launch, then end; delivery and replacement later
+  Stop.FlowId
+  Deliver.{ FlowId Request }
+  Enqueue.{ Address Request }
+  Replace.FlowId ]
+[ Started.FlowId                                      ; outcomes: success only after the matching witness and commit
+  Stopped Delivered Enqueued Replaced.FlowId
+  Failed.[ CapsuleRefused HarnessRefused StoreRefused
+           RecoveryRequired Unavailable ] ]
+[]                                                    ; additional types

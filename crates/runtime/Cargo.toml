@@ -1,0 +1,14 @@
+[package]
+name = "flow-nexus-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+datom = ["dep:datom-codec", "flow-nexus-types/datom"]
+
+[dependencies]
+rkyv.workspace = true
+datom-codec = { workspace = true, optional = true }
+flow-nexus-types.workspace = true

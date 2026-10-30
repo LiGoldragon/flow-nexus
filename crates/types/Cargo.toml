@@ -1,0 +1,13 @@
+[package]
+name = "flow-nexus-types"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+datom = ["dep:datom-codec"]
+
+[dependencies]
+rkyv.workspace = true
+datom-codec = { workspace = true, optional = true }

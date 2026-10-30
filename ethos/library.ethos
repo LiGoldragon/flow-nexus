@@ -1,0 +1,32 @@
+Library
+[]                                                    ; imports
+[ FlowId.String                                       ; types: Nexus-minted six-character identity
+  SessionId.String                                    ;   harness identity, independent of FlowId
+  Topic.String
+  Aspect.[ Psyche Mind Field ]
+  Layer.[ Primary Secondary Tertiary Quaternary ]
+  Address.{ Aspect Topic Layer }                      ;   the local permaflow address
+  Remembering.String
+  Brief.String
+  ModuleId.String
+  HarnessModuleName.String
+  Model.String
+  Tokens.Integer
+  Request.[ Order.String Question.String              ;   the closed request vocabulary
+            Words.String Result.String Notice.String ]
+  Declaration.{ Address Vector<ModuleId>               ;   belief modules and blacklist
+                Vector<HarnessModuleName> }
+  State.[ Started Working Idle Ended ]
+  TranscriptPath.String
+  ProcessId.Integer
+  ProcessStart.Integer
+  ProcessBinding.{ ProcessId ProcessStart FlowId }     ;   incarnation, not PID alone
+  Pane.String
+  Home.String
+  Capsule.{ Home Pane }
+  MetaflowName.String
+  SocketPath.String
+  Peer.{ MetaflowName SocketPath }
+  Holder.[ Local Peer ] ]                             ;   one declared holder per address
+[]                                                    ; traits: behavior follows in the implementation pass
+[]                                                    ; associations
