@@ -49,10 +49,25 @@ ConsumedFurnishedPaths.{
 
 Cleanup closed `w1:p1` and stopped the three owned pairs and Herdr server; all
 recorded PIDs were absent afterward. The retained directory is evidence, not a
-running deployment. This run proves the bridge-free Flow public contract, integrated owner-login
-Register, configured-Flow-peer Furnish, and live harness adoption for the
-pinned candidate. It does not prove restart continuity or deployment into an existing
-metaflow.
+running deployment. This run proves the bridge-free Flow public contract,
+integrated owner-login Register, configured-Flow-peer Furnish, and live harness
+adoption for the pinned candidate. It does not prove restart continuity or
+deployment into an existing metaflow.
+
+## Owner-split acceptance before bridge removal
+
+The preceding acceptance at `/tmp/first-launch-li-2856328.OwgS0N` used Flow
+source `1673138c66c6424871c4d2ec034d5f317e44451e` and package
+`/nix/store/rlgkpbw000fpdjks0l7byv3azif7prp6-flow-nexus-v1`. It first proved
+that the replacement ownership path worked while the unused public bridge was
+still compiled into Flow. The owner CLI registered repository revision
+`37caac6e7346579599c859e094d0ac730b7b2a66`; actual Flow translator identity
+`{ 1001 2856518 }` furnished; `Launched.1` created `w1:p1`; and the observed
+assistant nonce was `N15097A11016Q20226Z19990`. The run contained no Flow
+Register command. Its four recorded processes were absent after cleanup.
+
+That evidence established the replacement path and authorized removal. It is
+distinct from the bridge-free candidate and its later nonce above.
 
 The older retained proof at `/tmp/real-three-nexus-proof-1793811173` remains
 historical evidence for source `77530fd`; it used the temporary Flow Register
