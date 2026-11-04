@@ -476,8 +476,8 @@ dependencies = [
 
 [[package]]
 name = "signal-belief-nexus"
-version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=ccfa452bf1b807c9f180a4cae70318e66afb9a11#ccfa452bf1b807c9f180a4cae70318e66afb9a11"
+version = "0.2.0"
+source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=579cf898b4ebd633457c936858b1166f16e88716#579cf898b4ebd633457c936858b1166f16e88716"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",
@@ -488,8 +488,8 @@ dependencies = [
 
 [[package]]
 name = "signal-flow-nexus-version-1"
-version = "2.0.0"
-source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=dfc1245adf3e8551e151e2499ea930d0913135aa#dfc1245adf3e8551e151e2499ea930d0913135aa"
+version = "3.0.0"
+source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=31c7d96fbbfb6288061558328fea84cf7695a028#31c7d96fbbfb6288061558328fea84cf7695a028"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",
