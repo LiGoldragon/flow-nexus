@@ -34,7 +34,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let validated_admission = flow_nexus_wire::validate_admission(&admission)?;
     let text_budget = TextBudget { node_limit: integer(args.next(), "NODES")?, depth_limit: integer(args.next(), "DEPTH")? };
     if text_budget.node_limit <= 0 || text_budget.depth_limit <= 0 { return Err("text budget must be positive".into()); }
-    if args.next().is_some() { return Err("unexpected pair argument".into()); }
+    let trusted_path_vector = args.map(PathBuf::from).collect::<Vec<_>>();
+    if trusted_path_vector.iter().any(|path| !path.is_absolute()) { return Err("trusted Codex paths must be absolute".into()); }
     let mut decode_budget = datom_codec::Budget { remaining: text_budget.node_limit, reader: protos::ReaderBudget { remaining: text_budget.node_limit as usize }, depth: 0, maximum_depth: text_budget.depth_limit };
     let place = shared_translator::decode::<shared_translator::Place>(&place_text, &mut decode_budget).map_err(|error| format!("{error:?}"))?;
     if !shared_translator::placement::runtime_path(&place).is_dir() || !shared_translator::placement::state_path(&place).is_dir() { return Err("Place directories must exist".into()); }
@@ -44,7 +45,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let capacity = FrameCapacity::default();
     let sent = (|| -> Result<(), Box<dyn std::error::Error>> {
         let mut input = core.stdin.take().ok_or("core stdin")?;
-        input.write_frame(&CoreBootstrap { place: place.clone(), admission: admission.clone(), peer_identity: PeerIdentity { user_id: user_id.clone(), process_id: ProcessId(i64::from(translator.id())) } }.signalize()?, capacity)?;
+        input.write_frame(&CoreBootstrap {
+            place: place.clone(), admission: admission.clone(),
+            codex_deployment: flow_nexus_wire::CodexDeployment {
+                trusted_path_vector: trusted_path_vector.iter().map(|path| path.to_string_lossy().into_owned()).collect(),
+            },
+            peer_identity: PeerIdentity { user_id: user_id.clone(), process_id: ProcessId(i64::from(translator.id())) },
+        }.signalize()?, capacity)?;
         input.flush()?; drop(input);
         let mut input = translator.stdin.take().ok_or("translator stdin")?;
         input.write_frame(&TranslatorBootstrap { place: place.clone(), admission, text_budget, peer_identity: PeerIdentity { user_id, process_id: ProcessId(i64::from(core.id())) } }.signalize()?, capacity)?;

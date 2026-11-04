@@ -71,7 +71,11 @@ fn define_and_launch_survive_quiet_external_execution() {
         }
     });
 
-    let core_bootstrap = wire::CoreBootstrap { place: place.clone(), admission: admission_value.clone(), peer_identity: caller.clone() };
+    let core_bootstrap = wire::CoreBootstrap {
+        place: place.clone(), admission: admission_value.clone(),
+        codex_deployment: wire::CodexDeployment { trusted_path_vector: vec![] },
+        peer_identity: caller.clone(),
+    };
     let translator_bootstrap = wire::TranslatorBootstrap { place: place.clone(), admission: admission_value, text_budget: wire::TextBudget { node_limit: 65536, depth_limit: 64 }, peer_identity: caller };
     std::thread::spawn(move || flow_nexus_daemon::run(&core_bootstrap).unwrap());
     std::thread::spawn(move || flow_nexus_translator::run(&translator_bootstrap).unwrap());

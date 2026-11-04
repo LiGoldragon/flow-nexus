@@ -28,13 +28,18 @@ pub struct Core {
     memory: DefinitionMemory,
     definitions: Mutex<Arc<BTreeMap<String, Complex>>>,
     session: signal_herdr_nexus::Session,
+    trusted_codex_paths: HashSet<std::path::PathBuf>,
     next_flow_id: AtomicI64,
 }
 
 impl Core {
-    pub fn start(memory: DefinitionMemory, session: signal_herdr_nexus::Session) -> Result<Self, LoadFailure> {
+    pub fn start(
+        memory: DefinitionMemory,
+        session: signal_herdr_nexus::Session,
+        trusted_codex_paths: HashSet<std::path::PathBuf>,
+    ) -> Result<Self, LoadFailure> {
         let definitions = validate_set(&memory.load()?)?;
-        Ok(Self { memory, definitions: Mutex::new(Arc::new(definitions)), session, next_flow_id: AtomicI64::new(1) })
+        Ok(Self { memory, definitions: Mutex::new(Arc::new(definitions)), session, trusted_codex_paths, next_flow_id: AtomicI64::new(1) })
     }
 
     pub fn capture(&self) -> Arc<BTreeMap<String, Complex>> {
@@ -168,7 +173,7 @@ impl Core {
                 agent_name: signal_herdr_nexus::AgentName(format!("flow-{}", flow_id.0)),
                 agent_kind: signal_herdr_nexus::AgentKind::Codex,
                 executable: signal_herdr_nexus::Executable::Configured,
-                string_vector: vec!["--model".into(), member.model_name.0.clone()],
+                string_vector: codex_arguments(&member.model_name.0, &workspace_path, &self.trusted_codex_paths),
             },
             label: signal_herdr_nexus::Label(format!("{}:{}", request.complex_name.0, request.flow_name.0)),
         }));
@@ -185,6 +190,39 @@ impl Core {
             Ok(outcome) | Err(outcome) => Outcome::Refused(RequestFailure::PromptFailed(PromptFailed { flow_id, pane, outcome })),
         }
     }
+}
+
+fn codex_arguments(model: &str, workspace: &std::path::Path, trusted_paths: &HashSet<std::path::PathBuf>) -> Vec<String> {
+    let mut arguments = vec!["--model".into(), model.into()];
+    if trusted_paths.contains(workspace) {
+        arguments.push("-c".into());
+        arguments.push(format!(
+            "projects={{\"{}\"={{trust_level=\"trusted\"}}}}",
+            toml_basic_string(workspace.to_string_lossy().as_ref()),
+        ));
+    }
+    arguments
+}
+
+fn toml_basic_string(value: &str) -> String {
+    let mut escaped = String::new();
+    for character in value.chars() {
+        match character {
+            '\\' => escaped.push_str("\\\\"),
+            '"' => escaped.push_str("\\\""),
+            '\u{08}' => escaped.push_str("\\b"),
+            '\t' => escaped.push_str("\\t"),
+            '\n' => escaped.push_str("\\n"),
+            '\u{0c}' => escaped.push_str("\\f"),
+            '\r' => escaped.push_str("\\r"),
+            character if character <= '\u{1f}' || character == '\u{7f}' => {
+                use std::fmt::Write as _;
+                let _ = write!(escaped, "\\u{:04X}", u32::from(character));
+            }
+            character => escaped.push(character),
+        }
+    }
+    escaped
 }
 
 fn register_failure(register_failure: RegisterFailure) -> Outcome {
@@ -363,9 +401,26 @@ mod tests {
     }
 
     #[test]
+    fn codex_trust_override_is_exactly_scoped_and_toml_escaped() {
+        let trusted = PathBuf::from("/tmp/trusted\\path\"line\nnext");
+        let trusted_paths = HashSet::from([trusted.clone()]);
+        assert_eq!(
+            codex_arguments("configured", &trusted, &trusted_paths),
+            [
+                "--model", "configured", "-c",
+                "projects={\"/tmp/trusted\\\\path\\\"line\\nnext\"={trust_level=\"trusted\"}}",
+            ],
+        );
+        assert_eq!(
+            codex_arguments("configured", std::path::Path::new("/tmp/unlisted"), &trusted_paths),
+            ["--model", "configured"],
+        );
+    }
+
+    #[test]
     fn register_propagates_repository_and_typed_state() {
         let fixture = Fixture::new();
-        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         let repository = signal_belief_nexus::Repository(signal_belief_nexus::RepositoryPath("/fixture/repository".into()));
         let expected = signal_belief_nexus::RepositoryState { repository: repository.clone(), source_revision: signal_belief_nexus::SourceRevision("revision".into()) };
         let mut port = RegisterPort { repository: None };
@@ -376,12 +431,12 @@ mod tests {
     #[test]
     fn define_restart_describe_and_list() {
         let fixture = Fixture::new();
-        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         let mut emission = NoEmission;
         let value = complex("one", "configured");
         assert_eq!(core.execute(Operation::Defining(value.clone()), &mut emission), Outcome::Defined(ComplexName("one".into())));
         drop(core);
-        let restarted = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let restarted = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         assert_eq!(restarted.execute(Operation::Describing(ComplexName("one".into())), &mut emission), Outcome::Described(value));
         assert_eq!(restarted.execute(Operation::Listing, &mut emission), Outcome::Listed(vec![ComplexName("one".into())]));
     }
@@ -389,7 +444,7 @@ mod tests {
     #[test]
     fn invalid_define_preserves_the_published_and_persisted_value() {
         let fixture = Fixture::new();
-        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         let mut emission = NoEmission;
         let original = complex("one", "original");
         assert!(matches!(core.execute(Operation::Defining(original.clone()), &mut emission), Outcome::Defined(_)));
@@ -397,14 +452,14 @@ mod tests {
         invalid.speaker = Speaker(FlowName("missing".into()));
         assert!(matches!(core.execute(Operation::Defining(invalid), &mut emission), Outcome::Refused(RequestFailure::Invalid(_))));
         drop(core);
-        let restarted = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let restarted = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         assert_eq!(restarted.execute(Operation::Describing(ComplexName("one".into())), &mut emission), Outcome::Described(original));
     }
 
     #[test]
     fn launch_furnishes_then_creates_starts_and_prompts() {
         let fixture = Fixture::new();
-        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         let mut no_emission = NoEmission;
         let value = complex("one", "configured");
         assert!(matches!(core.execute(Operation::Defining(value.clone()), &mut no_emission), Outcome::Defined(_)));
@@ -419,7 +474,7 @@ mod tests {
     #[test]
     fn required_missing_belief_refuses_before_create() {
         let fixture = Fixture::new();
-        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into()), HashSet::new()).unwrap();
         let mut no_emission = NoEmission;
         let value = complex("one", "configured");
         assert!(matches!(core.execute(Operation::Defining(value.clone()), &mut no_emission), Outcome::Defined(_)));

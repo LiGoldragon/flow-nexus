@@ -11,9 +11,17 @@ pub fn run(bootstrap: &wire::CoreBootstrap) -> Result<(), Box<dyn std::error::Er
     let runtime = shared_translator::placement::runtime_path(&bootstrap.place);
     let state = shared_translator::placement::state_path(&bootstrap.place);
     if !runtime.is_dir() || !state.is_dir() { return Err("Flow Place directories must exist".into()); }
+    let mut trusted_codex_paths = std::collections::HashSet::new();
+    for value in &bootstrap.codex_deployment.trusted_path_vector {
+        let path = std::path::PathBuf::from(value);
+        if !path.is_absolute() || !trusted_codex_paths.insert(path) {
+            return Err("trusted Codex paths must be unique absolute paths".into());
+        }
+    }
     let core = Core::start(
         DefinitionMemory::open(&state)?,
         signal_herdr_nexus::Session((bootstrap.place.metaflow_name.0).clone()),
+        trusted_codex_paths,
     )?;
     let mut emission = SocketEmission { bootstrap };
     let peer = shared_translator::unix::LivePeer::capture(bootstrap.peer_identity.clone())?;

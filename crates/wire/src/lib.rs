@@ -30,7 +30,13 @@ pub struct TextBudget {
 pub struct CoreBootstrap {
     pub place: Place,
     pub admission: AdmissionValue,
+    pub codex_deployment: CodexDeployment,
     pub peer_identity: PeerIdentity,
+}
+
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct CodexDeployment {
+    pub trusted_path_vector: Vec<String>,
 }
 
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq)]
