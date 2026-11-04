@@ -6,10 +6,11 @@ set -euo pipefail
 belief_package=/nix/store/3v2wkqf3wj3miw1kq66v72fv5136wlwb-belief-nexus-v1
 herdr_package=/nix/store/51k5a966vki9d8ipah1p5kjj18mmbawv-herdr-nexus-v1
 herdr=/nix/store/9x03bz0q0a978zrzcshrlmmb4fvcmdb6-herdr-0.8.2/bin/herdr
-flow_pair=/nix/store/wh5wc0k233s0c17v4cpgzhz355xly40d-flow-nexus-engines-1.0.0/libexec/flow-pair-engine
-flow_daemon=/nix/store/m0smrcg3a3m9fiyxra14gd35a03hj06r-flow-nexus-daemon-1.0.0/bin/flow-nexus-daemon
-flow_translator=/nix/store/9yda7l27dh7m2mamzhpf33w2bkrrsqmr-flow-nexus-translator-1.0.0/bin/flow-nexus-translator
-flow=/nix/store/23gcqby1mh3b3996r2rs4fxlx6z29475-flow-nexus-v1/bin/flow-nexus
+flow_package=/nix/store/rlgkpbw000fpdjks0l7byv3azif7prp6-flow-nexus-v1
+flow_pair=/nix/store/p9za9qa0jzhb09fgk4qzxa7z9d4p4ngp-flow-nexus-engines-1.0.0/libexec/flow-pair-engine
+flow_daemon=/nix/store/wlis7696hpjbs7ffwxvlc4p0brl67x96-flow-nexus-daemon-1.0.0/bin/flow-nexus-daemon
+flow_translator=/nix/store/xjgq61pfjdfcb9b2ppyybshp6p65dn7i-flow-nexus-translator-1.0.0/bin/flow-nexus-translator
+flow="$flow_package/bin/flow-nexus"
 
 for executable in \
   "$flow_pair" "$flow_daemon" "$flow_translator" "$flow" \
@@ -137,7 +138,18 @@ for _ in $(seq 1 200); do
 done
 [[ "$belief_ready" == 'Resolved.{ [] [] }' ]]
 
-  "$flow_pair" "$place" "$flow_daemon" "$flow_translator" 70000 8388608 25 1048576 64 "$workspace" >"$evidence/flow-pair.log" 2>&1 &
+# Readiness is a typed configuration result, not the appearance of a socket.
+belief_meta="$belief_package/bin/belief-nexus-meta"
+belief_polling=$(capture belief-polling "$belief_meta" "$metaflow" \
+  'Configure.{ None RepositoryPolling.211 }')
+[[ "$belief_polling" == Configured.*Ready* ]]
+
+# The login owns repository registration. The configured Flow peer will only Furnish.
+registered=$(capture belief-register "$belief_package/bin/belief-nexus" "$metaflow" "Register.«$repository»")
+[[ "$registered" == Registered.* ]]
+
+# The package's immutable pair engine accepts proof-local Codex trust as its final setting.
+"$flow_pair" "$place" "$flow_daemon" "$flow_translator" 70000 8388608 25 1048576 64 "$workspace" >"$evidence/flow-pair.log" 2>&1 &
 flow_pair_pid=$!; pair_pids+=("$flow_pair_pid")
 wait_for_socket "$flow_pair_pid" "$runtime/flow-translator.sock" "$evidence/flow-pair.log"
 flow_translator_pid=$(child_matching "$flow_pair_pid" '/flow-nexus-translator')
@@ -151,7 +163,6 @@ herdr_peer=$(capture herdr-peer "$herdr_meta" "$metaflow" \
 [[ "$herdr_peer" == Configured.* ]]
 
 # Atomically replace the one OrdinaryPeers field. The final Belief body authorizes this live peer.
-belief_meta="$belief_package/bin/belief-nexus-meta"
 belief_peers=$(capture belief-peers "$belief_meta" "$metaflow" \
   "Configure.{ None OrdinaryPeers.[ { flow { $flow_translator_uid $flow_translator_pid } } ] }")
 [[ "$belief_peers" == Configured.*Ready* ]]
@@ -166,10 +177,6 @@ for _ in $(seq 1 200); do
 done
 "$herdr" --session "$metaflow" status server >"$evidence/herdr-server-status.out"
 
-# Temporary first-launch scaffold: Flow Register makes the configured Flow peer own this source.
-# It is removed when Belief accepts Login-owned Register followed by peer-owned Furnish.
-registered=$(capture flow-register "$flow" "$metaflow" "Register.«$repository»")
-[[ "$registered" == Registered.* ]]
 definition="Define.{ demo [ { worker Codex gpt-6.1-sol Medium Ephemeral Path.«$workspace» { [ { Spirit core } ] Refuse } HarnessDefault [] } ] worker }"
 defined=$(capture flow-define "$flow" "$metaflow" "$definition")
 [[ "$defined" == 'Defined.demo' ]]
@@ -218,10 +225,16 @@ done
 grep -F -q "$target" "$evidence/pane-output.txt"
 printf 'ObservedAssistant.%s\n' "$target" | tee "$evidence/observed-assistant.out"
 
-# Furnishing was accepted from Belief's returned paths; retain the concrete stable artifacts used by Start.
-test -f "$workspace/.belief/current/instructions.md"
-test -d "$workspace/.agents/skills"
-printf 'FurnishedPaths.{ %s %s }\n' \
-  "$workspace/.belief/current/instructions.md" "$workspace/.agents/skills" | tee "$evidence/furnished-paths.out"
+# Furnishing was accepted from Belief's returned paths. Verify the stable paths
+# that Flow checked and the Codex configuration/discovery paths consumed by Start.
+system_prompt="$workspace/.belief/current/instructions.md"
+skills="$workspace/.belief/current/skills"
+skill_discovery="$workspace/.agents/skills"
+test -f "$system_prompt"
+test -d "$skills"
+grep -F -x "model_instructions_file = \"$system_prompt\"" "$workspace/.codex/config.toml" >/dev/null
+[[ "$(realpath "$skill_discovery")" == "$(realpath "$skills")" ]]
+printf 'ConsumedFurnishedPaths.{ %s %s %s }\n' \
+  "$system_prompt" "$skills" "$skill_discovery" | tee "$evidence/furnished-paths.out"
 
 printf 'REAL_THREE_NEXUS_LAUNCH_OK base=%s flow=%s pane=%s\n' "$base" "$launched" "$pane"
