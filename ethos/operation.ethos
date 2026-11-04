@@ -1,10 +1,12 @@
 Operation
-[ signal_flow_nexus_version_1:[ Complex ComplexName DefinitionFailure ] ]
+[ signal_flow_nexus_version_1:[ Complex ComplexName LaunchRequest FlowId RequestFailure ] ]
 [ Defining.Complex
   Describing.ComplexName
-  Listing ]
+  Listing
+  Launching.LaunchRequest ]
 [ Defined.ComplexName
   Described.Complex
   Listed.Vector<ComplexName>
-  Refused.DefinitionFailure ]
+  Refused.RequestFailure
+  Launched.FlowId ]
 []

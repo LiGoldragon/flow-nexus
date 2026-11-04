@@ -6,4 +6,6 @@ rust-version.workspace = true
 
 [dependencies]
 signal-flow-nexus-version-1.workspace = true
+signal-belief-nexus.workspace = true
+signal-herdr-nexus.workspace = true
 rkyv = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }

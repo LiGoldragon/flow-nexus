@@ -62,6 +62,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f079e83a288787bcd14a6aea84cee5c87a67c5a3e660c30f557a3d24761b3527"
 
 [[package]]
+name = "core-meta-herdr-nexus"
+version = "0.1.0"
+source = "git+https://github.com/LiGoldragon/herdr-nexus?rev=cce12214cc13182eb462257606c963631779f99b#cce12214cc13182eb462257606c963631779f99b"
+dependencies = [
+ "meta-signal-herdr-nexus",
+ "rkyv",
+ "signal",
+ "translator",
+]
+
+[[package]]
 name = "datom-codec"
 version = "0.32.2"
 source = "git+https://github.com/LiGoldragon/datom-codec?rev=4dff16b4f7412febc3b71aac8b49680cd20988cb#4dff16b4f7412febc3b71aac8b49680cd20988cb"
@@ -134,9 +145,12 @@ dependencies = [
 name = "flow-nexus-core"
 version = "1.0.0"
 dependencies = [
+ "flow-nexus-emission",
  "rkyv",
  "signal",
+ "signal-belief-nexus",
  "signal-flow-nexus-version-1",
+ "signal-herdr-nexus",
 ]
 
 [[package]]
@@ -144,10 +158,12 @@ name = "flow-nexus-daemon"
 version = "1.0.0"
 dependencies = [
  "flow-nexus-core",
+ "flow-nexus-emission",
  "flow-nexus-wire",
  "nix",
  "signal",
  "signal-flow-nexus-version-1",
+ "signal-herdr-nexus",
  "translator",
 ]
 
@@ -156,7 +172,9 @@ name = "flow-nexus-emission"
 version = "1.0.0"
 dependencies = [
  "rkyv",
+ "signal-belief-nexus",
  "signal-flow-nexus-version-1",
+ "signal-herdr-nexus",
 ]
 
 [[package]]
@@ -164,11 +182,15 @@ name = "flow-nexus-translator"
 version = "1.0.0"
 dependencies = [
  "datom-codec 0.32.3",
+ "flow-nexus-emission",
  "flow-nexus-wire",
+ "herdr-nexus-wire",
  "nix",
  "protos",
  "signal",
+ "signal-belief-nexus",
  "signal-flow-nexus-version-1",
+ "signal-herdr-nexus",
  "translator",
 ]
 
@@ -212,6 +234,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
+name = "herdr-nexus-wire"
+version = "0.1.0"
+source = "git+https://github.com/LiGoldragon/herdr-nexus?rev=cce12214cc13182eb462257606c963631779f99b#cce12214cc13182eb462257606c963631779f99b"
+dependencies = [
+ "core-meta-herdr-nexus",
+ "libc",
+ "meta-signal-herdr-nexus",
+ "nix",
+ "rkyv",
+ "signal",
+ "signal-herdr-nexus",
+ "translator",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -251,6 +288,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "meta-signal-herdr-nexus"
+version = "0.1.0"
+source = "git+https://github.com/LiGoldragon/meta-signal-herdr-nexus?rev=1c85502#1c855028eb1a6c66ee7977b82ed4dbaa76a92da4"
+dependencies = [
+ "rkyv",
+ "signal",
+ "translator",
 ]
 
 [[package]]
@@ -428,24 +475,37 @@ dependencies = [
 [[package]]
 name = "signal-belief-nexus"
 version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=838cdcaa2c8a54bbb0ece43cbf795ffb698858f4#838cdcaa2c8a54bbb0ece43cbf795ffb698858f4"
+source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=fba4feb779ae1bb56274f92aa4c9e8a23f98b1d0#fba4feb779ae1bb56274f92aa4c9e8a23f98b1d0"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",
  "rkyv",
  "signal",
+ "translator",
 ]
 
 [[package]]
 name = "signal-flow-nexus-version-1"
 version = "1.0.0"
-source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=79197996d37800feb04c6a1b03e64e2c85ca31b7#79197996d37800feb04c6a1b03e64e2c85ca31b7"
+source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=f65e59f38adf74dbea14936d069295c6bfec4939#f65e59f38adf74dbea14936d069295c6bfec4939"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",
  "rkyv",
  "signal",
  "signal-belief-nexus",
+ "signal-herdr-nexus",
+]
+
+[[package]]
+name = "signal-herdr-nexus"
+version = "0.1.0"
+source = "git+https://github.com/LiGoldragon/signal-herdr-nexus?rev=8d78cd8dcdab228c67b6d471969eecb43c6fd68b#8d78cd8dcdab228c67b6d471969eecb43c6fd68b"
+dependencies = [
+ "datom-codec 0.32.3",
+ "protos",
+ "rkyv",
+ "signal",
 ]
 
 [[package]]

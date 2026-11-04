@@ -6,7 +6,11 @@ rust-version.workspace = true
 
 [dependencies]
 flow-nexus-wire = { path = "../wire" }
+flow-nexus-emission = { path = "../emission" }
 signal-flow-nexus-version-1 = { workspace = true, features = ["datom"] }
+signal-belief-nexus.workspace = true
+signal-herdr-nexus.workspace = true
+herdr-nexus-wire.workspace = true
 signal.workspace = true
 shared-translator = { workspace = true, features = ["text"] }
 datom-codec = { git = "https://github.com/LiGoldragon/datom-codec", rev = "e26d90ff185d54bc0007b19a8d9bc390c6bfeb12" }

@@ -11,6 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub struct DefinitionMemory {
+    state: PathBuf,
     canonical: PathBuf,
     staging: PathBuf,
     sequence: AtomicU64,
@@ -35,8 +36,10 @@ impl DefinitionMemory {
         let staging = root.join("definition-staging");
         std::fs::create_dir_all(&canonical).map_err(|_| LoadFailure::Unavailable)?;
         std::fs::create_dir_all(&staging).map_err(|_| LoadFailure::Unavailable)?;
-        Ok(Self { canonical, staging, sequence: AtomicU64::new(1) })
+        Ok(Self { state: state.to_owned(), canonical, staging, sequence: AtomicU64::new(1) })
     }
+
+    pub fn state(&self) -> &Path { &self.state }
 
     /// Restores the complete definition set. One malformed canonical file
     /// refuses the whole load; staging artifacts are outside this namespace.
