@@ -7,4 +7,5 @@ edition = "2021"
 rust-version = "1.89"
 
 [workspace.dependencies]
-signal-flow-nexus-version-1 = { git = "https://github.com/LiGoldragon/signal-flow-nexus", rev = "966d479a30e05a652c48b1316405c2f2c640ada4", default-features = false }
+signal-flow-nexus-version-1 = { git = "https://github.com/LiGoldragon/signal-flow-nexus", rev = "2285c3773ae8db8795b279fbfc967dedfc474d80", default-features = false }
+signal = { git = "https://github.com/LiGoldragon/signal", rev = "0cad1d1aeddec7da2971dc88e964320a6db48c20", default-features = false }

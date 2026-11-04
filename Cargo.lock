@@ -107,6 +107,7 @@ name = "flow-nexus-core"
 version = "1.0.0"
 dependencies = [
  "rkyv",
+ "signal",
  "signal-flow-nexus-version-1",
 ]
 
@@ -345,7 +346,7 @@ dependencies = [
 [[package]]
 name = "signal-flow-nexus-version-1"
 version = "1.0.0"
-source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=966d479a30e05a652c48b1316405c2f2c640ada4#966d479a30e05a652c48b1316405c2f2c640ada4"
+source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=2285c3773ae8db8795b279fbfc967dedfc474d80#2285c3773ae8db8795b279fbfc967dedfc474d80"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",

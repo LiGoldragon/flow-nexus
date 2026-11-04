@@ -23,8 +23,9 @@
         checks = rec {
           test = rust.craneLib.cargoTest { src = source; inherit cargoArtifacts; cargoTestExtraArgs = "--workspace --all-features"; };
           operation-generated = generatedCheck "operation" ./ethos/operation.ethos ./crates/core/src/generated/operation.rs;
+          memory-generated = generatedCheck "memory" ./ethos/memory.ethos ./crates/core/src/generated/memory.rs;
           emission-generated = generatedCheck "emission" ./ethos/emission.ethos ./crates/emission/src/generated/emission.rs;
-          generated = pkgs.runCommand "flow-generated-contracts" { contracts = [ operation-generated emission-generated ]; } ''
+          generated = pkgs.runCommand "flow-generated-contracts" { contracts = [ operation-generated memory-generated emission-generated ]; } ''
             for contract in $contracts; do test -e "$contract"; done
             touch "$out"
           '';

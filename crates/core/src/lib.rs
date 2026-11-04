@@ -1,6 +1,7 @@
 //! Pure F1 definition validation and atomic mutation runtime.
 
-pub mod generated { pub mod operation; }
+pub mod generated { pub mod memory; pub mod operation; }
+pub mod memory;
 pub use generated::operation::{Operation, Outcome};
 
 use signal_flow_nexus_version_1::{

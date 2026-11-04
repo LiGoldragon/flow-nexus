@@ -1,0 +1,4 @@
+Memory
+[ signal_flow_nexus_version_1:[ Complex ComplexName MemoryRefusal ] ]
+[ Definition.Complex
+  Answer.[ Succeeded Failed.MemoryRefusal ] ]
