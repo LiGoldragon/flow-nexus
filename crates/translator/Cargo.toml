@@ -16,3 +16,6 @@ shared-translator = { workspace = true, features = ["text"] }
 datom-codec = { git = "https://github.com/LiGoldragon/datom-codec", rev = "e26d90ff185d54bc0007b19a8d9bc390c6bfeb12" }
 protos = { git = "https://github.com/LiGoldragon/protos", rev = "15b41da8f2579e73ead59bc0c2b97529b8ac32d3" }
 nix = { version = "0.30", features = ["fs", "user", "signal", "process"] }
+
+[dev-dependencies]
+flow-nexus-daemon = { path = "../daemon" }

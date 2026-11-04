@@ -182,6 +182,7 @@ name = "flow-nexus-translator"
 version = "1.0.0"
 dependencies = [
  "datom-codec 0.32.3",
+ "flow-nexus-daemon",
  "flow-nexus-emission",
  "flow-nexus-wire",
  "herdr-nexus-wire",

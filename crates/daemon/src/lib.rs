@@ -31,15 +31,26 @@ fn serve_call(
     core: &Core,
     emission: &mut impl EmissionPort,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let mut bounded = shared_translator::unix::DeadlineStream::new(stream, admission.deadline)?;
-    let frame = shared_translator::unix::read_frame(&mut bounded, admission.frame_capacity)?;
+    serve_request(stream, admission, |query| execute(core, emission, query))
+}
+
+fn serve_request(
+    stream: UnixStream,
+    admission: shared_translator::unix::Admission,
+    handle: impl FnOnce(signal_flow_nexus_version_1::Query) -> signal_flow_nexus_version_1::Response,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let response_stream = stream.try_clone()?;
+    let mut request_stream = shared_translator::unix::DeadlineStream::new(stream, admission.deadline)?;
+    let frame = shared_translator::unix::read_frame(&mut request_stream, admission.frame_capacity)?;
     if frame.lane != wire::PUBLIC_SIGNAL_LANE || frame.kind != wire::REQUEST_KIND {
         return Err("wrong Flow signal lane".into());
     }
+    drop(request_stream);
     let call = Signal::<wire::Call>::from(frame.payload).restore()?;
-    let response = execute(core, emission, call.input);
+    let response = handle(call.input);
     let signal = response.signalize()?;
-    shared_translator::unix::write_frame(&mut bounded, &shared_translator::unix::Frame {
+    let mut response_stream = shared_translator::unix::DeadlineStream::new(response_stream, admission.deadline)?;
+    shared_translator::unix::write_frame(&mut response_stream, &shared_translator::unix::Frame {
         lane: wire::PUBLIC_SIGNAL_LANE, kind: wire::ANSWER_KIND, payload: signal.bytes().to_vec(),
     }, admission.frame_capacity)?;
     Ok(())
@@ -88,5 +99,43 @@ impl EmissionPort for SocketEmission<'_> {
             .map_err(|_| EmissionTransport::Uncertain)?.ok_or(EmissionTransport::Uncertain)?;
         if frame.lane != wire::PUBLIC_SIGNAL_LANE || frame.kind != wire::ANSWER_KIND { return Err(EmissionTransport::Uncertain); }
         Signal::<emission::Response>::from(frame.payload).restore().map_err(|_| EmissionTransport::Uncertain)
+    }
+}
+
+#[cfg(test)]
+mod transport_tests {
+    use super::*;
+    use shared_translator::{Caller, ProcessId, UserId};
+    use std::time::Duration;
+
+    fn admission() -> shared_translator::unix::Admission {
+        shared_translator::unix::Admission::new(Duration::from_millis(20), 8192, Duration::from_millis(1)).unwrap()
+    }
+
+    #[test]
+    fn external_operation_may_outlive_frame_progress_deadline() {
+        let (client, server) = UnixStream::pair().unwrap();
+        let server_thread = std::thread::spawn(move || {
+            serve_request(server, admission(), |_| {
+                std::thread::sleep(Duration::from_millis(80));
+                signal_flow_nexus_version_1::Response::Listed(vec![])
+            }).unwrap();
+        });
+        let read = client.try_clone().unwrap();
+        let call = wire::Call {
+            caller: Caller { process_id: ProcessId(1), user_id: UserId(1) },
+            input: signal_flow_nexus_version_1::Query::Definitions,
+        }.signalize().unwrap();
+        let mut write = shared_translator::unix::DeadlineStream::new(client, admission().deadline).unwrap();
+        shared_translator::unix::write_frame(&mut write, &shared_translator::unix::Frame {
+            lane: wire::PUBLIC_SIGNAL_LANE, kind: wire::REQUEST_KIND, payload: call.bytes().to_vec(),
+        }, admission().frame_capacity).unwrap();
+        drop(write);
+        let response = shared_translator::unix::read_frame_after_idle(read, admission().deadline, admission().frame_capacity)
+            .unwrap().unwrap();
+        assert_eq!(response.kind, wire::ANSWER_KIND);
+        assert_eq!(Signal::<signal_flow_nexus_version_1::Response>::from(response.payload).restore().unwrap(),
+            signal_flow_nexus_version_1::Response::Listed(vec![]));
+        server_thread.join().unwrap();
     }
 }

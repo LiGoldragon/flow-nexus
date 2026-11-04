@@ -232,4 +232,65 @@ mod tests {
         assert_eq!(decode("Describe.main", &mut fixture_budget()).unwrap(), Query::Describe(ComplexName("main".into())));
         assert_eq!(encode(&Response::Listed(vec![])), "Listed.[]");
     }
+
+    fn transport_fixture() -> (std::path::PathBuf, wire::TranslatorBootstrap, shared_translator::unix::Admission) {
+        let root = std::env::temp_dir().join(format!("flow-idle-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        let runtime = root.join("runtime");
+        let state = root.join("state");
+        std::fs::create_dir_all(&runtime).unwrap();
+        std::fs::create_dir_all(&state).unwrap();
+        let admission_value = wire::AdmissionValue { frame_deadline_milliseconds: 20, frame_capacity_bytes: 8192, retry_delay_milliseconds: 1 };
+        let bootstrap = wire::TranslatorBootstrap {
+            place: shared_translator::Place {
+                metaflow_name: shared_translator::MetaflowName("fixture".into()),
+                runtime: shared_translator::Runtime(runtime.to_string_lossy().into_owned()),
+                state: shared_translator::State(state.to_string_lossy().into_owned()),
+            },
+            admission: admission_value.clone(),
+            text_budget: wire::TextBudget { node_limit: 4096, depth_limit: 32 },
+            peer_identity: shared_translator::PeerIdentity { user_id: shared_translator::UserId(1), process_id: shared_translator::ProcessId(1) },
+        };
+        let admission = wire::validate_admission(&admission_value).unwrap();
+        (root, bootstrap, admission)
+    }
+
+    #[test]
+    fn core_execution_may_be_quiet_beyond_frame_deadline() {
+        let (root, bootstrap, admission) = transport_fixture();
+        let path = shared_translator::placement::runtime_path(&bootstrap.place).join(wire::CORE_SOCKET);
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        let server = std::thread::spawn(move || {
+            let (stream, _) = listener.accept().unwrap();
+            let read = stream.try_clone().unwrap();
+            let mut bounded = shared_translator::unix::DeadlineStream::new(read, admission.deadline).unwrap();
+            let _ = shared_translator::unix::read_frame(&mut bounded, admission.frame_capacity).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(80));
+            let response = Response::Listed(vec![]).signalize().unwrap();
+            let mut bounded = shared_translator::unix::DeadlineStream::new(stream, admission.deadline).unwrap();
+            shared_translator::unix::write_frame(&mut bounded, &shared_translator::unix::Frame { lane: wire::PUBLIC_SIGNAL_LANE, kind: wire::ANSWER_KIND, payload: response.bytes().to_vec() }, admission.frame_capacity).unwrap();
+        });
+        let call = wire::Call { caller: own_caller(), input: Query::Definitions };
+        assert_eq!(binary_call(&bootstrap, admission, call).unwrap(), Response::Listed(vec![]));
+        server.join().unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn response_progress_stall_remains_bounded_after_first_byte() {
+        let (root, bootstrap, admission) = transport_fixture();
+        let path = shared_translator::placement::runtime_path(&bootstrap.place).join(wire::CORE_SOCKET);
+        let listener = std::os::unix::net::UnixListener::bind(&path).unwrap();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let read = stream.try_clone().unwrap();
+            let mut bounded = shared_translator::unix::DeadlineStream::new(read, admission.deadline).unwrap();
+            let _ = shared_translator::unix::read_frame(&mut bounded, admission.frame_capacity).unwrap();
+            stream.write_all(&[0]).unwrap();
+            std::thread::sleep(std::time::Duration::from_millis(80));
+        });
+        let call = wire::Call { caller: own_caller(), input: Query::Definitions };
+        assert!(binary_call(&bootstrap, admission, call).is_err());
+        server.join().unwrap();
+        std::fs::remove_dir_all(root).unwrap();
+    }
 }
