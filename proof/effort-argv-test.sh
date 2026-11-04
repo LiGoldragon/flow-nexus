@@ -6,4 +6,4 @@ set -euo pipefail
 # this script deliberately owns only the test invocation path.
 repo=${1:-$(git rev-parse --show-toplevel)}
 cd "$repo"
-exec nix develop --command cargo test -p flow-nexus-core codex_arguments
+exec nix build .#checks.x86_64-linux.test --no-link
