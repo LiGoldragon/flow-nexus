@@ -48,15 +48,34 @@ name = "datom-codec"
 version = "0.32.2"
 source = "git+https://github.com/LiGoldragon/datom-codec?rev=4dff16b4f7412febc3b71aac8b49680cd20988cb#4dff16b4f7412febc3b71aac8b49680cd20988cb"
 dependencies = [
- "datom-codec-derive",
+ "datom-codec-derive 0.32.0",
  "protos",
  "rkyv",
+]
+
+[[package]]
+name = "datom-codec"
+version = "0.32.3"
+source = "git+https://github.com/LiGoldragon/datom-codec?rev=e26d90ff185d54bc0007b19a8d9bc390c6bfeb12#e26d90ff185d54bc0007b19a8d9bc390c6bfeb12"
+dependencies = [
+ "datom-codec-derive 0.32.3",
+ "protos",
 ]
 
 [[package]]
 name = "datom-codec-derive"
 version = "0.32.0"
 source = "git+https://github.com/LiGoldragon/datom-codec?rev=4dff16b4f7412febc3b71aac8b49680cd20988cb#4dff16b4f7412febc3b71aac8b49680cd20988cb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "datom-codec-derive"
+version = "0.32.3"
+source = "git+https://github.com/LiGoldragon/datom-codec?rev=e26d90ff185d54bc0007b19a8d9bc390c6bfeb12#e26d90ff185d54bc0007b19a8d9bc390c6bfeb12"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -74,7 +93,7 @@ name = "ethos-zero"
 version = "16.0.0"
 source = "git+https://github.com/LiGoldragon/ethos-zero?rev=c2653dd82adbdb1f1f2f654405c6620e0d06fd58#c2653dd82adbdb1f1f2f654405c6620e0d06fd58"
 dependencies = [
- "datom-codec",
+ "datom-codec 0.32.2",
  "prettyplease",
  "proc-macro2",
  "protos",
@@ -106,6 +125,14 @@ dependencies = [
 [[package]]
 name = "flow-nexus-translator"
 version = "1.0.0"
+dependencies = [
+ "datom-codec 0.32.3",
+ "flow-nexus-core",
+ "flow-nexus-emission",
+ "protos",
+ "signal-flow-nexus-version-1",
+ "translator",
+]
 
 [[package]]
 name = "futures-core"
@@ -309,6 +336,8 @@ name = "signal-belief-nexus"
 version = "0.1.0"
 source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=838cdcaa2c8a54bbb0ece43cbf795ffb698858f4#838cdcaa2c8a54bbb0ece43cbf795ffb698858f4"
 dependencies = [
+ "datom-codec 0.32.3",
+ "protos",
  "rkyv",
  "signal",
 ]
@@ -318,6 +347,8 @@ name = "signal-flow-nexus-version-1"
 version = "1.0.0"
 source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=966d479a30e05a652c48b1316405c2f2c640ada4#966d479a30e05a652c48b1316405c2f2c640ada4"
 dependencies = [
+ "datom-codec 0.32.3",
+ "protos",
  "rkyv",
  "signal",
  "signal-belief-nexus",
@@ -382,6 +413,17 @@ name = "tinyvec"
 version = "1.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fd3ca314f692efd6c868f8408f53fe444634a845f96c028b97d35f6a1f79f0ee"
+
+[[package]]
+name = "translator"
+version = "0.1.0"
+source = "git+https://github.com/LiGoldragon/translator?rev=2676fd0cb0ced3316dc151f73a9f59856e15e62d#2676fd0cb0ced3316dc151f73a9f59856e15e62d"
+dependencies = [
+ "datom-codec 0.32.3",
+ "protos",
+ "rkyv",
+ "signal",
+]
 
 [[package]]
 name = "unicode-ident"
