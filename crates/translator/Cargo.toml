@@ -19,3 +19,4 @@ nix = { version = "0.30", features = ["fs", "user", "signal", "process"] }
 
 [dev-dependencies]
 flow-nexus-daemon = { path = "../daemon" }
+rkyv = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }

@@ -188,6 +188,7 @@ dependencies = [
  "herdr-nexus-wire",
  "nix",
  "protos",
+ "rkyv",
  "signal",
  "signal-belief-nexus",
  "signal-flow-nexus-version-1",
@@ -476,7 +477,7 @@ dependencies = [
 [[package]]
 name = "signal-belief-nexus"
 version = "0.1.0"
-source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=fba4feb779ae1bb56274f92aa4c9e8a23f98b1d0#fba4feb779ae1bb56274f92aa4c9e8a23f98b1d0"
+source = "git+https://github.com/LiGoldragon/signal-belief-nexus?rev=ccfa452bf1b807c9f180a4cae70318e66afb9a11#ccfa452bf1b807c9f180a4cae70318e66afb9a11"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",
@@ -488,7 +489,7 @@ dependencies = [
 [[package]]
 name = "signal-flow-nexus-version-1"
 version = "1.0.0"
-source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=f65e59f38adf74dbea14936d069295c6bfec4939#f65e59f38adf74dbea14936d069295c6bfec4939"
+source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=b470959cdcbdac39f1908a3e1b9a4a2f03b41463#b470959cdcbdac39f1908a3e1b9a4a2f03b41463"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",

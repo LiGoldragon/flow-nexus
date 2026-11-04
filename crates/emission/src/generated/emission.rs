@@ -47,8 +47,18 @@ pub enum Open_Data {
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Query {
+    Register(signal_belief_nexus::Repository),
     Furnish(Furnish_Data),
     Open(Open_Data),
+}
+#[rustfmt::skip]
+#[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
+pub enum Registered_Data {
+    Succeeded(signal_belief_nexus::RepositoryState),
+    Refused(signal_belief_nexus::Refusal),
+    Unavailable,
+    Uncertain,
 }
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
@@ -84,6 +94,7 @@ pub struct Opened_Data {
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Response {
+    Registered(Registered_Data),
     Furnished(Furnished_Data),
     Opened(Opened_Data),
 }

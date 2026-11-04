@@ -23,3 +23,7 @@ The `Tools` declaration records configuration. This scaffold does not enforce
 tool policy and has no Launch or Stop operation. It does not copy the Herdr
 server framework. Shared transport will use immutable translator revision
 `2676fd0cb0ced3316dc151f73a9f59856e15e62d` when implementation begins.
+
+## First-launch belief registration
+
+`Register.Repository` is the proof-of-concept integration setup operation. It makes the Flow translator register a belief source under the same authenticated peer that later furnishes the launched flow. Flow does not own the repository catalogue. This bridge is removed when Belief's Login-owner registration path supplies shared sources to configured peers.

@@ -10,7 +10,7 @@ use flow_nexus_emission::generated::emission as emission;
 use signal_flow_nexus_version_1::{
     Complex, ComplexName, CreateFailed, DefinitionRejection, DefinitionSet,
     DuplicateTool_Data, FlowId, FlowName, FurnishFailed, FurnishFailure, Harness, LaunchRequest,
-    Missing, MissingBeliefs, PromptFailed, RequestFailure, Restricted_Data, Route, StartFailed,
+    Missing, MissingBeliefs, PromptFailed, RegisterFailed, RegisterFailure, RequestFailure, Restricted_Data, Route, StartFailed,
     Tool, ToolConflict_Data, Tools, UnknownMemberRoute_Data, UnsupportedHarness, UnsupportedTools,
 };
 use std::collections::{BTreeMap, HashSet};
@@ -43,10 +43,20 @@ impl Core {
 
     pub fn execute(&self, operation: Operation, emission: &mut impl EmissionPort) -> Outcome {
         match operation {
+            Operation::Registering(repository) => self.register(repository, emission),
             Operation::Defining(complex) => self.define(complex),
             Operation::Describing(name) => self.describe(name),
             Operation::Listing => self.list(),
             Operation::Launching(request) => self.launch(request, emission),
+        }
+    }
+
+    fn register(&self, repository: signal_belief_nexus::Repository, port: &mut impl EmissionPort) -> Outcome {
+        match port.emit(emission::Query::Register(repository)) {
+            Ok(emission::Response::Registered(emission::Registered_Data::Succeeded(state))) => Outcome::Registered(state),
+            Ok(emission::Response::Registered(emission::Registered_Data::Refused(refusal))) => register_failure(RegisterFailure::Refused(refusal)),
+            Ok(emission::Response::Registered(emission::Registered_Data::Unavailable)) | Err(EmissionTransport::Unavailable) => register_failure(RegisterFailure::Unavailable),
+            Ok(emission::Response::Registered(emission::Registered_Data::Uncertain)) | Err(EmissionTransport::Uncertain) | Ok(_) => register_failure(RegisterFailure::Uncertain),
         }
     }
 
@@ -177,6 +187,10 @@ impl Core {
     }
 }
 
+fn register_failure(register_failure: RegisterFailure) -> Outcome {
+    Outcome::Refused(RequestFailure::RegisterFailed(RegisterFailed(register_failure)))
+}
+
 fn furnish_failure(flow_id: FlowId, furnish_failure: FurnishFailure) -> Outcome {
     Outcome::Refused(RequestFailure::FurnishFailed(FurnishFailed { flow_id, furnish_failure }))
 }
@@ -269,6 +283,7 @@ mod tests {
     impl EmissionPort for SuccessfulLaunch {
         fn emit(&mut self, query: emission::Query) -> Result<emission::Response, EmissionTransport> {
             match query {
+                emission::Query::Register(_) => panic!("launch emitted Register"),
                 emission::Query::Furnish(value) => {
                     self.steps.push("furnish");
                     let root = ((value.furnish_request.workspace.0).0).clone();
@@ -316,6 +331,17 @@ mod tests {
         }
     }
 
+    struct RegisterPort { repository: Option<signal_belief_nexus::Repository> }
+    impl EmissionPort for RegisterPort {
+        fn emit(&mut self, query: emission::Query) -> Result<emission::Response, EmissionTransport> {
+            let emission::Query::Register(repository) = query else { panic!("expected Register emission") };
+            self.repository = Some(repository.clone());
+            Ok(emission::Response::Registered(emission::Registered_Data::Succeeded(signal_belief_nexus::RepositoryState {
+                repository, source_revision: signal_belief_nexus::SourceRevision("revision".into()),
+            })))
+        }
+    }
+
     struct Fixture(PathBuf);
     impl Fixture {
         fn new() -> Self {
@@ -334,6 +360,17 @@ mod tests {
             beliefs: Beliefs { module_name_vector: vec![], missing: Missing::Refuse },
             tools: Tools::HarnessDefault, route_vector: vec![],
         }], speaker: Speaker(flow_name) }
+    }
+
+    #[test]
+    fn register_propagates_repository_and_typed_state() {
+        let fixture = Fixture::new();
+        let core = Core::start(DefinitionMemory::open(&fixture.0).unwrap(), signal_herdr_nexus::Session("test".into())).unwrap();
+        let repository = signal_belief_nexus::Repository(signal_belief_nexus::RepositoryPath("/fixture/repository".into()));
+        let expected = signal_belief_nexus::RepositoryState { repository: repository.clone(), source_revision: signal_belief_nexus::SourceRevision("revision".into()) };
+        let mut port = RegisterPort { repository: None };
+        assert_eq!(core.execute(Operation::Registering(repository.clone()), &mut port), Outcome::Registered(expected));
+        assert_eq!(port.repository, Some(repository));
     }
 
     #[test]

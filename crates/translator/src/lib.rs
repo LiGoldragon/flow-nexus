@@ -24,7 +24,8 @@ pub fn run(bootstrap: &wire::TranslatorBootstrap) -> Result<(), Box<dyn std::err
     let admission = wire::validate_admission(&bootstrap.admission)?;
     let runtime = shared_translator::placement::runtime_path(&bootstrap.place);
     if !runtime.is_dir() { return Err("Flow runtime directory must exist".into()); }
-    let core_peer = shared_translator::unix::LivePeer::capture(bootstrap.peer_identity.clone())?;
+    let core_peer = std::sync::Arc::new(shared_translator::unix::LivePeer::capture(bootstrap.peer_identity.clone())?);
+    let bootstrap = std::sync::Arc::new(bootstrap.clone());
     let listener = wire::BoundUnixListener::bind(runtime.join(wire::TRANSLATOR_SOCKET))?;
     let login = i64::from(nix::unistd::Uid::current().as_raw());
     loop {
@@ -33,7 +34,13 @@ pub fn run(bootstrap: &wire::TranslatorBootstrap) -> Result<(), Box<dyn std::err
             Ok(value) if value.user_id.0 == login => value,
             _ => continue,
         };
-        let _ = serve_connection(stream, credentials, bootstrap, admission, &core_peer);
+        let bootstrap = std::sync::Arc::clone(&bootstrap);
+        let core_peer = std::sync::Arc::clone(&core_peer);
+        std::thread::spawn(move || {
+            if let Err(error) = serve_connection(stream, credentials, &bootstrap, admission, &core_peer) {
+                eprintln!("Flow translator request failed: {error}");
+            }
+        });
     }
 }
 
@@ -80,6 +87,15 @@ fn execute_emission(
     query: emission::Query,
 ) -> emission::Response {
     match query {
+        emission::Query::Register(repository) => {
+            let call = signal_belief_nexus::Call { caller: own_caller(), query: signal_belief_nexus::Query::Register(repository) };
+            match belief_call(bootstrap, admission, call) {
+                External::Answered(signal_belief_nexus::Response::Registered(state)) => emission::Response::Registered(emission::Registered_Data::Succeeded(state)),
+                External::Answered(signal_belief_nexus::Response::Refused(refusal)) => emission::Response::Registered(emission::Registered_Data::Refused(refusal)),
+                External::Unavailable => emission::Response::Registered(emission::Registered_Data::Unavailable),
+                _ => emission::Response::Registered(emission::Registered_Data::Uncertain),
+            }
+        }
         emission::Query::Furnish(value) => {
             let call = signal_belief_nexus::Call { caller: own_caller(), query: signal_belief_nexus::Query::Furnish(value.furnish_request) };
             match belief_call(bootstrap, admission, call) {
