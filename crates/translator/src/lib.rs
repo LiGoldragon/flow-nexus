@@ -176,18 +176,28 @@ fn herdr_call(
     let stream = match UnixStream::connect(herdr_path(bootstrap)) { Ok(value) => value, Err(_) => return External::Unavailable };
     let read = match stream.try_clone() { Ok(value) => value, Err(_) => return External::Unavailable };
     let mut write = match shared_translator::unix::DeadlineStream::new(stream, admission.deadline) { Ok(value) => value, Err(_) => return External::Unavailable };
-    let request = shared_translator::unix::Frame {
-        lane: wire::PUBLIC_SIGNAL_LANE, kind: wire::REQUEST_KIND, payload: signal.bytes().to_vec(),
-    };
-    let Some(complete_bytes) = request.payload.len().checked_add(shared_translator::unix::HEADER_BYTES) else { return External::Unavailable };
-    if let Err(failure) = shared_translator::unix::write_frame_witness(&mut write, &request, admission.frame_capacity) {
-        return if failure.written < complete_bytes { External::Unavailable } else { External::Uncertain };
+    let bytes = signal.bytes();
+    let Ok(length) = u32::try_from(bytes.len()) else { return External::Unavailable };
+    if bytes.len() > admission.frame_capacity { return External::Unavailable; }
+    let Some(complete_bytes) = bytes.len().checked_add(4) else { return External::Unavailable };
+    let mut witnessed = CountingWriter { inner: &mut write, written: 0 };
+    if witnessed.write_all(&length.to_be_bytes()).and_then(|()| witnessed.write_all(bytes)).and_then(|()| witnessed.flush()).is_err() {
+        return if witnessed.written < complete_bytes { External::Unavailable } else { External::Uncertain };
     }
-    let frame = match shared_translator::unix::read_frame_after_idle(read, admission.deadline, admission.frame_capacity) {
-        Ok(Some(value)) if value.lane == wire::PUBLIC_SIGNAL_LANE && value.kind == wire::ANSWER_KIND => value,
-        _ => return External::Uncertain,
-    };
-    match Signal::<herdr_nexus_wire::public_call::Response>::from(frame.payload).restore() { Ok(value) => External::Answered(value), Err(_) => External::Uncertain }
+    let Some(body) = read_signal_after_idle(read, admission) else { return External::Uncertain };
+    match Signal::<herdr_nexus_wire::public_call::Response>::from(body).restore() { Ok(value) => External::Answered(value), Err(_) => External::Uncertain }
+}
+
+struct CountingWriter<W> { inner: W, written: usize }
+
+impl<W: Write> Write for CountingWriter<W> {
+    fn write(&mut self, buffer: &[u8]) -> std::io::Result<usize> {
+        let count = self.inner.write(buffer)?;
+        self.written = self.written.saturating_add(count);
+        Ok(count)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> { self.inner.flush() }
 }
 
 fn read_signal_after_idle(stream: UnixStream, admission: shared_translator::unix::Admission) -> Option<Vec<u8>> {

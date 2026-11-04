@@ -58,11 +58,8 @@ fn define_and_launch_survive_quiet_external_execution() {
     let herdr = UnixListener::bind(runtime.join("herdr.sock")).unwrap();
     std::thread::spawn(move || {
         for step in 0..3 {
-            let (stream, _) = herdr.accept().unwrap();
-            let read = stream.try_clone().unwrap();
-            let mut bounded = shared_translator::unix::DeadlineStream::new(read, Duration::from_secs(1)).unwrap();
-            let frame = shared_translator::unix::read_frame(&mut bounded, 65536).unwrap();
-            let call = Signal::<herdr_nexus_wire::public_call::Query>::from(frame.payload).restore().unwrap();
+            let (mut stream, _) = herdr.accept().unwrap();
+            let call: herdr_nexus_wire::public_call::Query = read_plain(&mut stream);
             let herdr_nexus_wire::public_call::Query::Call(value) = call;
             let outcome = match (step, value.input.0) {
                 (0, signal_herdr_nexus::Query::Create(workspace)) => signal_herdr_nexus::Response::Created(signal_herdr_nexus::Outcome::Created(signal_herdr_nexus::Pane { session: workspace.session, pane_id: signal_herdr_nexus::PaneId("w:p".into()) })),
@@ -70,9 +67,7 @@ fn define_and_launch_survive_quiet_external_execution() {
                 (2, signal_herdr_nexus::Query::Prompt(_)) => signal_herdr_nexus::Response::Prompted(signal_herdr_nexus::Outcome::Done),
                 _ => panic!("unexpected Herdr step"),
             };
-            let response = herdr_nexus_wire::public_call::Response::Answered(herdr_nexus_wire::public_payload::Output(outcome)).signalize().unwrap();
-            let mut bounded = shared_translator::unix::DeadlineStream::new(stream, Duration::from_secs(1)).unwrap();
-            shared_translator::unix::write_frame(&mut bounded, &shared_translator::unix::Frame { lane: wire::PUBLIC_SIGNAL_LANE, kind: wire::ANSWER_KIND, payload: response.bytes().to_vec() }, 65536).unwrap();
+            write_plain(&mut stream, herdr_nexus_wire::public_call::Response::Answered(herdr_nexus_wire::public_payload::Output(outcome)));
         }
     });
 
