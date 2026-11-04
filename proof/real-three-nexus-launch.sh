@@ -6,10 +6,10 @@ set -euo pipefail
 belief_package=/nix/store/3v2wkqf3wj3miw1kq66v72fv5136wlwb-belief-nexus-v1
 herdr_package=/nix/store/51k5a966vki9d8ipah1p5kjj18mmbawv-herdr-nexus-v1
 herdr=/nix/store/9x03bz0q0a978zrzcshrlmmb4fvcmdb6-herdr-0.8.2/bin/herdr
-flow_package=/nix/store/rlgkpbw000fpdjks0l7byv3azif7prp6-flow-nexus-v1
-flow_pair=/nix/store/p9za9qa0jzhb09fgk4qzxa7z9d4p4ngp-flow-nexus-engines-1.0.0/libexec/flow-pair-engine
-flow_daemon=/nix/store/wlis7696hpjbs7ffwxvlc4p0brl67x96-flow-nexus-daemon-1.0.0/bin/flow-nexus-daemon
-flow_translator=/nix/store/xjgq61pfjdfcb9b2ppyybshp6p65dn7i-flow-nexus-translator-1.0.0/bin/flow-nexus-translator
+flow_package=/nix/store/fx97zi3zql2rm1s5xpllx1dbdfd3axdc-flow-nexus-v1
+flow_pair=/nix/store/ykc19hndw3rjhcrvm06xqqzlxc2lwjq5-flow-nexus-engines-1.0.0/libexec/flow-pair-engine
+flow_daemon=/nix/store/i3cijwhxx6jb86iw2zsk1x60764b5y1h-flow-nexus-daemon-1.0.0/bin/flow-nexus-daemon
+flow_translator=/nix/store/srqgh07cz5mffkwzk86k4g14qdvsj9ap-flow-nexus-translator-1.0.0/bin/flow-nexus-translator
 flow="$flow_package/bin/flow-nexus"
 
 for executable in \
