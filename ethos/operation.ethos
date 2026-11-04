@@ -1,10 +1,10 @@
 Operation
-[ signal_flow_nexus_version_1:[ Complex ComplexName DefinitionSet MutationFailure Snapshot ] ]
+[ signal_flow_nexus_version_1:[ Complex ComplexName DefinitionFailure ] ]
 [ Defining.Complex
-  Undefining.ComplexName
-  Describing ]
+  Describing.ComplexName
+  Listing ]
 [ Defined.ComplexName
-  Undefined.ComplexName
-  Described.Snapshot
-  Refused.MutationFailure ]
+  Described.Complex
+  Listed.Vector<ComplexName>
+  Refused.DefinitionFailure ]
 []

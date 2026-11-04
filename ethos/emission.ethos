@@ -1,9 +1,7 @@
 ; Stand-in: Emission is temporarily expressed as a Signal root; ethos-zero has no Emission root.
+; Furnish and Open land with their checked external contract types.
 Signal
-[ signal_flow_nexus_version_1:[ Complex ComplexName PersistenceFailure ] ]
-[ Persist.Complex
-  Remove.ComplexName ]
-[ Persisted.ComplexName
-  Removed.ComplexName
-  Refused.PersistenceFailure ]
+[]
+[]
+[]
 []

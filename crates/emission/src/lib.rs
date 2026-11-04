@@ -1,7 +1,3 @@
-//! Generated persistence emission stand-in.
+//! Flow launch emission stand-in; Furnish and Open land with external contracts.
 
-pub mod generated {
-    pub mod emission;
-}
-
-pub use generated::emission::{Query, Response};
+pub mod generated { pub mod emission; }

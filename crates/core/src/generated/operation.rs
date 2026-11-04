@@ -9,15 +9,15 @@
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Operation {
     Defining(signal_flow_nexus_version_1::Complex),
-    Undefining(signal_flow_nexus_version_1::ComplexName),
-    Describing,
+    Describing(signal_flow_nexus_version_1::ComplexName),
+    Listing,
 }
 #[rustfmt::skip]
 #[derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "datom", derive(datom_codec::Datomizable, datom_codec::Composing))]
 pub enum Outcome {
     Defined(signal_flow_nexus_version_1::ComplexName),
-    Undefined(signal_flow_nexus_version_1::ComplexName),
-    Described(signal_flow_nexus_version_1::Snapshot),
-    Refused(signal_flow_nexus_version_1::MutationFailure),
+    Described(signal_flow_nexus_version_1::Complex),
+    Listed(std::vec::Vec<signal_flow_nexus_version_1::ComplexName>),
+    Refused(signal_flow_nexus_version_1::DefinitionFailure),
 }
