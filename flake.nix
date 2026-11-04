@@ -3,7 +3,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     rust-build = {
-      url = "github:LiGoldragon/rust-build/1bcdafd4590952f73fada56b0507c64192fd6327";
+      url = "github:LiGoldragon/rust-build";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

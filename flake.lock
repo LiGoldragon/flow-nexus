@@ -114,7 +114,6 @@
       "original": {
         "owner": "LiGoldragon",
         "repo": "rust-build",
-        "rev": "1bcdafd4590952f73fada56b0507c64192fd6327",
         "type": "github"
       }
     },
