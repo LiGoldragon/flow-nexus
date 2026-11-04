@@ -9,7 +9,7 @@ use memory::{DefinitionMemory, LoadFailure};
 use flow_nexus_emission::generated::emission as emission;
 use signal_flow_nexus_version_1::{
     Complex, ComplexName, CreateFailed, DefinitionRejection, DefinitionSet,
-    DuplicateTool_Data, FlowId, FlowName, FurnishFailed, FurnishFailure, Harness, LaunchRequest,
+    DuplicateTool_Data, Effort, FlowId, FlowName, FurnishFailed, FurnishFailure, Harness, LaunchRequest,
     Missing, MissingBeliefs, PromptFailed, RegisterFailed, RegisterFailure, RequestFailure, Restricted_Data, Route, StartFailed,
     Tool, ToolConflict_Data, Tools, UnknownMemberRoute_Data, UnsupportedHarness, UnsupportedTools,
 };
@@ -173,7 +173,7 @@ impl Core {
                 agent_name: signal_herdr_nexus::AgentName(format!("flow-{}", flow_id.0)),
                 agent_kind: signal_herdr_nexus::AgentKind::Codex,
                 executable: signal_herdr_nexus::Executable::Configured,
-                string_vector: codex_arguments(&member.model_name.0, &workspace_path, &self.trusted_codex_paths),
+                string_vector: codex_arguments(&member.model_name.0, &member.effort, &workspace_path, &self.trusted_codex_paths),
             },
             label: signal_herdr_nexus::Label(format!("{}:{}", request.complex_name.0, request.flow_name.0)),
         }));
@@ -192,8 +192,21 @@ impl Core {
     }
 }
 
-fn codex_arguments(model: &str, workspace: &std::path::Path, trusted_paths: &HashSet<std::path::PathBuf>) -> Vec<String> {
-    let mut arguments = vec!["--model".into(), model.into()];
+fn codex_arguments(
+    model: &str,
+    effort: &Effort,
+    workspace: &std::path::Path,
+    trusted_paths: &HashSet<std::path::PathBuf>,
+) -> Vec<String> {
+    let effort = match effort {
+        Effort::Low => "low",
+        Effort::Medium => "medium",
+        Effort::High => "high",
+    };
+    let mut arguments = vec![
+        "--model".into(), model.into(),
+        "-c".into(), format!("model_reasoning_effort=\"{effort}\""),
+    ];
     if trusted_paths.contains(workspace) {
         arguments.push("-c".into());
         arguments.push(format!(
@@ -357,7 +370,10 @@ mod tests {
                 emission::Query::Open(emission::Open_Data::Start(value)) => {
                     self.steps.push("start");
                     assert_eq!(value.command.agent_kind, signal_herdr_nexus::AgentKind::Codex);
-                    assert_eq!(value.command.string_vector, ["--model", "configured"]);
+                    assert_eq!(
+                        value.command.string_vector,
+                        ["--model", "configured", "-c", "model_reasoning_effort=\"medium\""],
+                    );
                     Ok(emission::Response::Opened(emission::Opened_Data { flow_id: value.flow_id, outcome: signal_herdr_nexus::Outcome::Done }))
                 }
                 emission::Query::Open(emission::Open_Data::Prompt(value)) => {
@@ -405,16 +421,35 @@ mod tests {
         let trusted = PathBuf::from("/tmp/trusted\\path\"line\nnext");
         let trusted_paths = HashSet::from([trusted.clone()]);
         assert_eq!(
-            codex_arguments("configured", &trusted, &trusted_paths),
+            codex_arguments("configured", &Effort::Medium, &trusted, &trusted_paths),
             [
-                "--model", "configured", "-c",
+                "--model", "configured", "-c", "model_reasoning_effort=\"medium\"", "-c",
                 "projects={\"/tmp/trusted\\\\path\\\"line\\nnext\"={trust_level=\"trusted\"}}",
             ],
         );
         assert_eq!(
-            codex_arguments("configured", std::path::Path::new("/tmp/unlisted"), &trusted_paths),
-            ["--model", "configured"],
+            codex_arguments("configured", &Effort::Medium, std::path::Path::new("/tmp/unlisted"), &trusted_paths),
+            ["--model", "configured", "-c", "model_reasoning_effort=\"medium\""],
         );
+    }
+
+    #[test]
+    fn codex_effort_is_an_exact_invocation_override() {
+        for (effort, configured) in [
+            (Effort::Low, "low"),
+            (Effort::Medium, "medium"),
+            (Effort::High, "high"),
+        ] {
+            assert_eq!(
+                codex_arguments("configured-model", &effort, std::path::Path::new("/tmp/workspace"), &HashSet::new()),
+                [
+                    "--model".to_owned(),
+                    "configured-model".to_owned(),
+                    "-c".to_owned(),
+                    format!("model_reasoning_effort=\"{configured}\""),
+                ],
+            );
+        }
     }
 
     #[test]
