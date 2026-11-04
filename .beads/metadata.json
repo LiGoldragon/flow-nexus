@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "flow_nexus_version_1",
+  "project_id": "fd98238d-902f-445b-85d5-dbf4196cfc98"
+}
