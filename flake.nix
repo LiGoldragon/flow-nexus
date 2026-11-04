@@ -20,6 +20,34 @@
           pkgs.runCommand "flow-${name}-generated" { generator = ethos-zero.packages.${system}.default; inherit declaration committed; }
             (builtins.readFile ./checks/generated-contract.sh);
       in {
+        packages = rec {
+          daemon = rust.craneLib.buildPackage {
+            pname = "flow-nexus-daemon"; version = "1.0.0"; src = source; inherit cargoArtifacts;
+            cargoExtraArgs = "-p flow-nexus-daemon --bin flow-nexus-daemon";
+          };
+          translator = rust.craneLib.buildPackage {
+            pname = "flow-nexus-translator"; version = "1.0.0"; src = source; inherit cargoArtifacts;
+            cargoExtraArgs = "-p flow-nexus-translator --bin flow-nexus-translator";
+          };
+          engines = rust.craneLib.buildPackage {
+            pname = "flow-nexus-engines"; version = "1.0.0"; src = source; inherit cargoArtifacts;
+            cargoExtraArgs = "-p flow-nexus-translator --bin flow-pair-engine --bin flow-nexus-engine";
+            postInstall = ''
+              mkdir -p "$out/libexec"
+              mv "$out/bin/flow-pair-engine" "$out/libexec/"
+              mv "$out/bin/flow-nexus-engine" "$out/libexec/"
+            '';
+          };
+          pair = pkgs.writeShellScriptBin "flow-pair" ''
+            if [[ $# -ne 1 ]]; then echo "usage: flow-pair '<Place>'" >&2; exit 64; fi
+            exec ${engines}/libexec/flow-pair-engine "$1" ${daemon}/bin/flow-nexus-daemon ${translator}/bin/flow-nexus-translator 70000 8388608 25 1048576 64
+          '';
+          cli = pkgs.writeShellScriptBin "flow-nexus" ''
+            if [[ $# -ne 2 ]]; then echo "usage: flow-nexus METAFLOW DATOM" >&2; exit 64; fi
+            exec ${engines}/libexec/flow-nexus-engine "$1" "$2" 70000 8388608 25
+          '';
+          default = pkgs.symlinkJoin { name = "flow-nexus-v1"; paths = [ daemon translator pair cli ]; };
+        };
         checks = rec {
           test = rust.craneLib.cargoTest { src = source; inherit cargoArtifacts; cargoTestExtraArgs = "--workspace --all-features"; };
           operation-generated = generatedCheck "operation" ./ethos/operation.ethos ./crates/core/src/generated/operation.rs;

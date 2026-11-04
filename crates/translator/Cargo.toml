@@ -5,9 +5,10 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-flow-nexus-core = { path = "../core" }
+flow-nexus-wire = { path = "../wire" }
 signal-flow-nexus-version-1 = { workspace = true, features = ["datom"] }
-flow-nexus-emission = { path = "../emission" }
-translator = { git = "https://github.com/LiGoldragon/translator", rev = "2676fd0cb0ced3316dc151f73a9f59856e15e62d", default-features = false, features = ["text"] }
+signal.workspace = true
+shared-translator = { workspace = true, features = ["text"] }
 datom-codec = { git = "https://github.com/LiGoldragon/datom-codec", rev = "e26d90ff185d54bc0007b19a8d9bc390c6bfeb12" }
 protos = { git = "https://github.com/LiGoldragon/protos", rev = "15b41da8f2579e73ead59bc0c2b97529b8ac32d3" }
+nix = { version = "0.30", features = ["fs", "user", "signal", "process"] }

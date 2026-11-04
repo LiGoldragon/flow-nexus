@@ -1,0 +1,10 @@
+[package]
+name = "flow-nexus-wire"
+version = "1.0.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+signal-flow-nexus-version-1.workspace = true
+shared-translator.workspace = true
+rkyv = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }

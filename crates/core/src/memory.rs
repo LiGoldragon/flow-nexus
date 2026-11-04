@@ -22,6 +22,10 @@ pub enum LoadFailure {
     Corrupt,
     Invalid(DefinitionRejection),
 }
+impl std::fmt::Display for LoadFailure {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { write!(formatter, "Flow Memory load failed: {self:?}") }
+}
+impl std::error::Error for LoadFailure {}
 
 impl DefinitionMemory {
     /// Opens the definition Memory beneath the already-resolved `Place.State`.

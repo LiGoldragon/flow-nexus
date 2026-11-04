@@ -4,3 +4,9 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
+flow-nexus-core = { path = "../core" }
+flow-nexus-wire = { path = "../wire" }
+signal-flow-nexus-version-1.workspace = true
+signal.workspace = true
+shared-translator.workspace = true
+nix = { version = "0.30", features = ["fs"] }

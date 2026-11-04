@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/core", "crates/daemon", "crates/translator", "crates/emission"]
+members = ["crates/core", "crates/daemon", "crates/translator", "crates/emission", "crates/wire"]
 
 [workspace.package]
 edition = "2021"
@@ -9,3 +9,4 @@ rust-version = "1.89"
 [workspace.dependencies]
 signal-flow-nexus-version-1 = { git = "https://github.com/LiGoldragon/signal-flow-nexus", rev = "79197996d37800feb04c6a1b03e64e2c85ca31b7", default-features = false }
 signal = { git = "https://github.com/LiGoldragon/signal", rev = "0cad1d1aeddec7da2971dc88e964320a6db48c20", default-features = false }
+shared-translator = { package = "translator", git = "https://github.com/LiGoldragon/translator", rev = "751c326f11c874b527a69ce6377ce9e196aeca37", default-features = false, features = ["unix"] }
