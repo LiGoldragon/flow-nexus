@@ -1,0 +1,33 @@
+Library
+[ signal_belief_nexus:[ ModuleName ] ]
+[ ComplexName.String
+  FlowName.String
+  ModelName.String
+  Harness.[ Claude Codex ]
+  Effort.[ Low Medium High ]
+  Continuity.[ Perma Ephemeral ]
+  Workspace.[ Path.String Temporary ]
+  Missing.[ Refuse Notice ]
+  Beliefs.{ Vector<ModuleName> Missing }
+  Tool.String
+  Tools.[ HarnessDefault
+          Restricted.{ Allow.Vector<Tool> Deny.Vector<Tool> } ]
+  Route.[ Speaks.FlowName Complex.ComplexName Living ]
+  Member.{ FlowName Harness ModelName Effort Continuity Workspace Beliefs Tools Vector<Route> }
+  Complex.{ ComplexName Vector<Member> Speaker.FlowName }
+  DefinitionSet.Vector<Complex>
+  DefinitionRejection.[ EmptyComplexName
+                         EmptyFlowName
+                         DuplicateMember.FlowName
+                         UnknownSpeaker.FlowName
+                         UnknownMemberRoute.{ FlowName FlowName }
+                         ToolConflict.{ FlowName Tool }
+                         DuplicateTool.{ FlowName Tool } ]
+  PersistenceFailure.{ ComplexName Message.String }
+  MutationFailure.[ Invalid.DefinitionRejection
+                    Busy.ComplexName
+                    Unknown.ComplexName
+                    Uncertain.ComplexName
+                    Unavailable.PersistenceFailure ] ]
+[]
+[]

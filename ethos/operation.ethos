@@ -1,0 +1,10 @@
+Operation
+[ local:[ Complex ComplexName DefinitionSet MutationFailure ] ]
+[ Defining.Complex
+  Undefining.ComplexName
+  Describing ]
+[ Defined.ComplexName
+  Undefined.ComplexName
+  Described.Snapshot
+  Refused.MutationFailure ]
+[ Snapshot.{ DefinitionSet Vector<ComplexName> } ]

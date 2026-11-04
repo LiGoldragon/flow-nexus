@@ -1,0 +1,10 @@
+Signal
+[ local:[ Complex ComplexName DefinitionSet MutationFailure ] ]
+[ Define.Complex
+  Undefine.ComplexName
+  Describe ]
+[ Defined.ComplexName
+  Undefined.ComplexName
+  Described.Snapshot
+  Refused.MutationFailure ]
+[ Snapshot.{ DefinitionSet Vector<ComplexName> } ]
