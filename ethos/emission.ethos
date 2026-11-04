@@ -1,18 +1,13 @@
 ; Stand-in: Emission is temporarily expressed as a Signal root; ethos-zero has no Emission root.
 Signal
 [ signal_flow_nexus_version_1:[ FlowId ]
-  signal_belief_nexus:[ Repository RepositoryState FurnishRequest FurnishedWorkspace Refusal ]
+  signal_belief_nexus:[ FurnishRequest FurnishedWorkspace Refusal ]
   signal_herdr_nexus:[ Workspace Pane Command Label Text Outcome ] ]
-[ Register.Repository
-  Furnish.{ FlowId FurnishRequest }
+[ Furnish.{ FlowId FurnishRequest }
   Open.[ Create.{ FlowId Workspace }
          Start.{ FlowId Pane Command Label }
          Prompt.{ FlowId Pane Text } ] ]
-[ Registered.[ Succeeded.RepositoryState
-               Refused.Refusal
-               Unavailable
-               Uncertain ]
-  Furnished.[ Succeeded.{ FlowId FurnishedWorkspace }
+[ Furnished.[ Succeeded.{ FlowId FurnishedWorkspace }
               Refused.{ FlowId Refusal }
               Unavailable.FlowId
               Uncertain.FlowId ]

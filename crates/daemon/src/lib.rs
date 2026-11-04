@@ -66,14 +66,12 @@ fn serve_request(
 
 fn execute(core: &Core, emission: &mut impl EmissionPort, query: signal_flow_nexus_version_1::Query) -> signal_flow_nexus_version_1::Response {
     let outcome = match query {
-        signal_flow_nexus_version_1::Query::Register(value) => core.execute(Operation::Registering(value), emission),
         signal_flow_nexus_version_1::Query::Define(value) => core.execute(Operation::Defining(value), emission),
         signal_flow_nexus_version_1::Query::Describe(name) => core.execute(Operation::Describing(name), emission),
         signal_flow_nexus_version_1::Query::Definitions => core.execute(Operation::Listing, emission),
         signal_flow_nexus_version_1::Query::Launch(value) => core.execute(Operation::Launching(value), emission),
     };
     match outcome {
-        Outcome::Registered(value) => signal_flow_nexus_version_1::Response::Registered(value),
         Outcome::Defined(value) => signal_flow_nexus_version_1::Response::Defined(value),
         Outcome::Described(value) => signal_flow_nexus_version_1::Response::Described(value),
         Outcome::Listed(value) => signal_flow_nexus_version_1::Response::Listed(value),

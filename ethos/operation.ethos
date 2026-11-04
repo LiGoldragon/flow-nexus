@@ -1,13 +1,10 @@
 Operation
-[ signal_flow_nexus_version_1:[ Complex ComplexName LaunchRequest FlowId RequestFailure ]
-  signal_belief_nexus:[ Repository RepositoryState ] ]
-[ Registering.Repository
-  Defining.Complex
+[ signal_flow_nexus_version_1:[ Complex ComplexName LaunchRequest FlowId RequestFailure ] ]
+[ Defining.Complex
   Describing.ComplexName
   Listing
   Launching.LaunchRequest ]
-[ Registered.RepositoryState
-  Defined.ComplexName
+[ Defined.ComplexName
   Described.Complex
   Listed.Vector<ComplexName>
   Refused.RequestFailure

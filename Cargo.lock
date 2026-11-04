@@ -488,8 +488,8 @@ dependencies = [
 
 [[package]]
 name = "signal-flow-nexus-version-1"
-version = "1.0.0"
-source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=b470959cdcbdac39f1908a3e1b9a4a2f03b41463#b470959cdcbdac39f1908a3e1b9a4a2f03b41463"
+version = "2.0.0"
+source = "git+https://github.com/LiGoldragon/signal-flow-nexus?rev=dfc1245adf3e8551e151e2499ea930d0913135aa#dfc1245adf3e8551e151e2499ea930d0913135aa"
 dependencies = [
  "datom-codec 0.32.3",
  "protos",
