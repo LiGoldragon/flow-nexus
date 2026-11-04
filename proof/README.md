@@ -1,24 +1,48 @@
-# Real three-Nexus first-launch proof — draft
+# Real three-Nexus first-launch proof
 
-**NOT YET RUN.** The prepared script is blocked on a compatible Belief body
-artifact. No launch success or runtime evidence is claimed here. The intended
-Flow input is commit `820cb0be365c5f170591a0f1ded7cec3ab43ce10`, package
-`/nix/store/sr454yspprplsizs5iylnlrhrff2q364-flow-nexus-v1`.
+This proof was run with immutable packages. Its retained evidence is
+`/tmp/real-three-nexus-proof-1793811173`.
 
-`real-three-nexus-launch.sh` starts the installed Flow, Belief, and Herdr pairs
-at one typed `Place`. It registers one committed belief module, binds the live
-Flow translator PID and UID as an ordinary peer in both downstream Nexuses,
-defines one Codex member, and issues one public `Launch`.
+- Flow source: `77530fd90204bcc3204c1275b6e765bf0dddfc95`
+- Belief: `/nix/store/3v2wkqf3wj3miw1kq66v72fv5136wlwb-belief-nexus-v1`
+- Herdr: `/nix/store/51k5a966vki9d8ipah1p5kjj18mmbawv-herdr-nexus-v1`
 
-A successful run records `Launched.1`, the exact Herdr pane labelled by Flow,
-the furnished paths, and a fresh concatenated nonce read from the real Codex
-pane. The concatenated nonce is absent from the Brief and belief bundle. The
-script retains evidence on failure and removes only its owned pane, Herdr
-session, pair processes, and temporary directory after success.
+The typed deployment explicitly trusted only the proof-owned furnished
+workspace. The temporary Flow `Register` bridge registered one committed
+Spirit module; the same configured Flow peer then asked Belief to furnish the
+workspace.
 
-```sh
-KEEP_PROOF=1 ./proof/real-three-nexus-launch.sh \
-  /nix/store/...-flow-nexus-v1 \
-  /nix/store/...-belief-nexus-v1 \
-  /nix/store/...-herdr-nexus-v1
+The submission chain completed:
+
+```text
+Registered.{ /tmp/real-three-nexus-proof-1793811173/repository 27014790ec1a94df3e8dcc285a8b5195d84b37f2 }
+Defined.demo
+Launched.1
+ObservedPane.w1:p1
 ```
+
+The separate assistant receipt witness was:
+
+```text
+ObservedAssistant.N28501A17348Q27967Z5895
+```
+
+That joined nonce was absent from the Brief, repository, workspace, and Launch
+arguments before submission. Its two halves appeared separately in the Brief.
+
+Belief furnished these paths:
+
+```text
+/tmp/real-three-nexus-proof-1793811173/workspace/.belief/current/instructions.md
+/tmp/real-three-nexus-proof-1793811173/workspace/.agents/skills
+```
+
+Cleanup closed the exact owned pane `w1:p1` and stopped the three owned pairs.
+The evidence directory remains for inspection. The Register bridge is a
+temporary first-launch scaffold until Login-owned Register and peer-owned
+Furnish replace it.
+
+Earlier attempts found three distinct causes before this proof: stale package
+autodetection selected incompatible Herdr and Belief packages; then a legacy
+pane-list parser missed a successful submission. The reproduced script pins
+every store path and parses the current pane output.

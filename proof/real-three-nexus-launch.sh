@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
-# DRAFT, NOT YET RUN: awaiting a compatible Belief body package.
-# Intended real first-launch proof: Flow -> Belief Furnish -> Herdr Create/Start/Prompt -> Codex response.
+# Real three-Nexus first-launch proof.
+# Witnessed once with immutable Flow, Belief, Herdr, and Herdr CLI packages.
 set -euo pipefail
 
-flow_package=${1:?usage: real-three-nexus-launch.sh FLOW_PACKAGE BELIEF_PACKAGE HERDR_PACKAGE [HERDR]}
-belief_package=${2:?usage: real-three-nexus-launch.sh FLOW_PACKAGE BELIEF_PACKAGE HERDR_PACKAGE [HERDR]}
-herdr_package=${3:?usage: real-three-nexus-launch.sh FLOW_PACKAGE BELIEF_PACKAGE HERDR_PACKAGE [HERDR]}
-herdr=${4:-/home/li/.nix-profile/bin/herdr}
+belief_package=/nix/store/3v2wkqf3wj3miw1kq66v72fv5136wlwb-belief-nexus-v1
+herdr_package=/nix/store/51k5a966vki9d8ipah1p5kjj18mmbawv-herdr-nexus-v1
+herdr=/nix/store/9x03bz0q0a978zrzcshrlmmb4fvcmdb6-herdr-0.8.2/bin/herdr
+flow_pair=/nix/store/wh5wc0k233s0c17v4cpgzhz355xly40d-flow-nexus-engines-1.0.0/libexec/flow-pair-engine
+flow_daemon=/nix/store/m0smrcg3a3m9fiyxra14gd35a03hj06r-flow-nexus-daemon-1.0.0/bin/flow-nexus-daemon
+flow_translator=/nix/store/9yda7l27dh7m2mamzhpf33w2bkrrsqmr-flow-nexus-translator-1.0.0/bin/flow-nexus-translator
+flow=/nix/store/23gcqby1mh3b3996r2rs4fxlx6z29475-flow-nexus-v1/bin/flow-nexus
 
 for executable in \
-  "$flow_package/bin/flow-pair" "$flow_package/bin/flow-nexus" \
+  "$flow_pair" "$flow_daemon" "$flow_translator" "$flow" \
   "$belief_package/bin/belief-pair" "$belief_package/bin/belief-nexus" "$belief_package/bin/belief-nexus-meta" \
   "$herdr_package/bin/herdr-pair" "$herdr_package/bin/herdr-nexus-meta" \
   "$herdr"; do
@@ -30,7 +33,7 @@ state="$base/state/$metaflow"
 workspace="$base/workspace"
 repository="$base/repository"
 evidence="$base/evidence"
-mkdir -p "$runtime" "$state" "$workspace" "$repository/knowledge" "$evidence"
+mkdir -p "$runtime" "$state" "$workspace" "$repository/spirit" "$evidence"
 place="{ $metaflow «$runtime» «$state» }"
 uid=$(id -u)
 pair_pids=()
@@ -98,17 +101,11 @@ child_matching() {
 }
 
 # One committed belief module is enough to witness a real furnished bundle.
-printf '%s\n' \
-  '---' \
-  'name: launch-proof' \
-  'description: Marks the real three-Nexus launch fixture.' \
-  '---' \
-  '' \
-  'FIRST_LAUNCH_BELIEF_MARKER' >"$repository/knowledge/launchProof.md"
+printf '%s\n' 'FIRST_LAUNCH_BELIEF_MARKER' >"$repository/spirit/core.md"
 git -C "$repository" init -b main >/dev/null
 git -C "$repository" config user.email proof@flow.invalid
 git -C "$repository" config user.name proof
-git -C "$repository" add knowledge/launchProof.md
+git -C "$repository" add spirit/core.md
 git -C "$repository" commit -m 'launch proof belief' >/dev/null
 git -C "$workspace" init -b main >/dev/null
 
@@ -132,10 +129,15 @@ grep -q Ready "$evidence/herdr-ready.txt"
 "$belief_package/bin/belief-pair" "$place" >"$evidence/belief-pair.log" 2>&1 &
 belief_pair_pid=$!; pair_pids+=("$belief_pair_pid")
 wait_for_socket "$belief_pair_pid" "$runtime/belief-meta-translator.sock" "$evidence/belief-pair.log"
-registered=$(capture belief-register "$belief_package/bin/belief-nexus" "$metaflow" "Register.«$repository»")
-[[ "$registered" == Registered.* ]]
+belief_ready=
+for _ in $(seq 1 200); do
+  belief_ready=$(capture belief-resolve "$belief_package/bin/belief-nexus" "$metaflow" 'Resolve.[]' 2>/dev/null || true)
+  [[ "$belief_ready" == Resolved.* ]] && break
+  sleep .05
+done
+[[ "$belief_ready" == 'Resolved.{ [] [] }' ]]
 
-"$flow_package/bin/flow-pair" "$place" >"$evidence/flow-pair.log" 2>&1 &
+  "$flow_pair" "$place" "$flow_daemon" "$flow_translator" 70000 8388608 25 1048576 64 "$workspace" >"$evidence/flow-pair.log" 2>&1 &
 flow_pair_pid=$!; pair_pids+=("$flow_pair_pid")
 wait_for_socket "$flow_pair_pid" "$runtime/flow-translator.sock" "$evidence/flow-pair.log"
 flow_translator_pid=$(child_matching "$flow_pair_pid" '/flow-nexus-translator')
@@ -145,17 +147,13 @@ printf 'FlowTranslator.{ %s %s }\n' "$flow_translator_pid" "$flow_translator_uid
 
 # Herdr captures and verifies this live PID/UID when it accepts the stable peer binding.
 herdr_peer=$(capture herdr-peer "$herdr_meta" "$metaflow" \
-  "Configure.Peer.{ flow-translator { $flow_translator_uid $flow_translator_pid } }")
+  "Configure.Peer.{ flow { $flow_translator_uid $flow_translator_pid } }")
 [[ "$herdr_peer" == Configured.* ]]
 
-# Obtain a coherent Belief revision, then atomically replace OrdinaryPeers by CAS.
+# Atomically replace the one OrdinaryPeers field. The final Belief body authorizes this live peer.
 belief_meta="$belief_package/bin/belief-nexus-meta"
-revision_witness=$(capture belief-revision "$belief_meta" "$metaflow" 'Configure.{ None RepositoryPolling.100 }')
-[[ "$revision_witness" == Configured.* ]]
-revision=$(sed -E 's/^Configured\.\{.* ([0-9]+) (Ready|Awaiting\..*) \}$/\1/' <<<"$revision_witness")
-[[ "$revision" =~ ^[0-9]+$ ]] || { printf 'could not decode Belief revision: %s\n' "$revision_witness" >&2; exit 1; }
 belief_peers=$(capture belief-peers "$belief_meta" "$metaflow" \
-  "Configure.{ Some.$revision OrdinaryPeers.[ { flow-translator { $flow_translator_uid $flow_translator_pid } } ] }")
+  "Configure.{ None OrdinaryPeers.[ { flow { $flow_translator_uid $flow_translator_pid } } ] }")
 [[ "$belief_peers" == Configured.*Ready* ]]
 
 # The real Herdr backend keeps the normal login credential environment. Only its owned session/runtime is isolated.
@@ -168,8 +166,11 @@ for _ in $(seq 1 200); do
 done
 "$herdr" --session "$metaflow" status server >"$evidence/herdr-server-status.out"
 
-flow="$flow_package/bin/flow-nexus"
-definition="Define.{ demo [ { worker Codex gpt-6.1-sol Medium Ephemeral Path.«$workspace» { [ { Knowledge launchProof } ] Refuse } HarnessDefault [] } ] worker }"
+# Temporary first-launch scaffold: Flow Register makes the configured Flow peer own this source.
+# It is removed when Belief accepts Login-owned Register followed by peer-owned Furnish.
+registered=$(capture flow-register "$flow" "$metaflow" "Register.«$repository»")
+[[ "$registered" == Registered.* ]]
+definition="Define.{ demo [ { worker Codex gpt-6.1-sol Medium Ephemeral Path.«$workspace» { [ { Spirit core } ] Refuse } HarnessDefault [] } ] worker }"
 defined=$(capture flow-define "$flow" "$metaflow" "$definition")
 [[ "$defined" == 'Defined.demo' ]]
 
@@ -191,8 +192,18 @@ printf '%s\n' "$launched" | tee "$evidence/launched.out"
 # Flow deliberately returns only FlowId. Observe the created pane independently and retain its exact identity.
 for _ in $(seq 1 200); do
   "$herdr" --session "$metaflow" pane list >"$evidence/panes.out" 2>&1 || true
-  pane=$(grep -oE 'w[0-9]+:p[0-9]+' "$evidence/panes.out" | head -1 || true)
-  [[ -n "$pane" ]] && grep -q 'demo:worker' "$evidence/panes.out" && break
+  pane=$(python3 - "$evidence/panes.out" "$workspace" <<'PY'
+import json, sys
+try:
+    body = json.load(open(sys.argv[1]))
+    panes = body.get("result", {}).get("panes", [])
+    matches = [p["pane_id"] for p in panes if p.get("cwd") == sys.argv[2] and p.get("agent") == "codex"]
+    print(matches[0] if len(matches) == 1 else "")
+except (OSError, ValueError, KeyError, TypeError):
+    print("")
+PY
+  )
+  [[ -n "$pane" ]] && break
   pane=
   sleep .1
 done
