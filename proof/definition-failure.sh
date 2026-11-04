@@ -16,14 +16,23 @@ for _ in $(seq 1 400); do [[ -S "$runtime/flow-translator.sock" ]] && break; kil
 [[ -S "$runtime/flow-translator.sock" ]]
 run(){ "$flow" "$metaflow" "$@"; }
 new='Define.{ failnew [ { worker Codex model-new Medium Ephemeral Temporary { [] Refuse } HarnessDefault [] } ] worker }'
+new2='Define.{ failrename [ { worker Codex model-rename Medium Ephemeral Temporary { [] Refuse } HarnessDefault [] } ] worker }'
 old='Define.{ existing [ { worker Codex model-old Low Ephemeral Temporary { [] Refuse } HarnessDefault [] } ] worker }'
 replacement='Define.{ existing [ { worker Codex model-replaced High Ephemeral Temporary { [] Refuse } HarnessDefault [] } ] worker }'
 run "$old" | tee "$evidence/define-old.out"
-mem="$state/flow-memory"; chmod 0555 "$mem/definition-staging"; run "$new" | tee "$evidence/staging-write-refused.out"; grep -q 'Refused.Memory' "$evidence/staging-write-refused.out"
+mem="$state/flow-memory"; existing_file="$mem/definitions/6578697374696e67"; sha256sum "$existing_file" | tee "$evidence/existing-before.sha256"
+chmod 0555 "$mem/definition-staging"; run "$new" | tee "$evidence/staging-write-refused.out"; grep -q 'Refused.Memory' "$evidence/staging-write-refused.out"
 chmod 0755 "$mem/definition-staging"; run "Describe.existing" | tee "$evidence/prior-after-write.out"; grep -q model-old "$evidence/prior-after-write.out"
+sha256sum -c "$evidence/existing-before.sha256"
+chmod 0555 "$mem/definition-staging"; run "$replacement" | tee "$evidence/replacement-staging-write-refused.out"; grep -q 'Refused.Memory' "$evidence/replacement-staging-write-refused.out"
+chmod 0755 "$mem/definition-staging"; run "Describe.existing" | tee "$evidence/prior-after-replacement-write.out"; grep -q model-old "$evidence/prior-after-replacement-write.out"
+sha256sum -c "$evidence/existing-before.sha256"
+chmod 0555 "$mem/definitions"; run "$new2" | tee "$evidence/new-rename-refused.out"; grep -q 'Refused.Memory' "$evidence/new-rename-refused.out"
+chmod 0755 "$mem/definitions"; run Definitions | tee "$evidence/after-new-rename.out"; ! grep -q failrename "$evidence/after-new-rename.out"
 chmod 0555 "$mem/definitions" 2>/dev/null || true
 run "$replacement" | tee "$evidence/rename-refused.out"; grep -q 'Refused.Memory' "$evidence/rename-refused.out"
 chmod 0755 "$mem/definitions"; run "Describe.existing" | tee "$evidence/prior-after-rename.out"; grep -q model-old "$evidence/prior-after-rename.out"
+sha256sum -c "$evidence/existing-before.sha256"
 run "$new" | tee "$evidence/recovered-new.out"; grep -q 'Defined.failnew' "$evidence/recovered-new.out"
 kill "$pair_pid"; wait "$pair_pid" || true; pair_pid=
 rm -f -- "$runtime"/*.sock
