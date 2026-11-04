@@ -1,3 +1,10 @@
 [workspace]
 resolver = "2"
 members = ["crates/core", "crates/daemon", "crates/translator", "crates/emission"]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.89"
+
+[workspace.dependencies]
+signal-flow-nexus-version-1 = { git = "https://github.com/LiGoldragon/signal-flow-nexus", rev = "966d479a30e05a652c48b1316405c2f2c640ada4", default-features = false }

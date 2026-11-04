@@ -1,5 +1,5 @@
 Operation
-[ local:[ Complex ComplexName DefinitionSet MutationFailure ] ]
+[ signal_flow_nexus_version_1:[ Complex ComplexName DefinitionSet MutationFailure Snapshot ] ]
 [ Defining.Complex
   Undefining.ComplexName
   Describing ]
@@ -7,4 +7,4 @@ Operation
   Undefined.ComplexName
   Described.Snapshot
   Refused.MutationFailure ]
-[ Snapshot.{ DefinitionSet Vector<ComplexName> } ]
+[]
