@@ -19,7 +19,7 @@
       common = {
         inherit src;
         pname = "flow-nexus-anatomy";
-        version = "1.0.0";
+        version = (builtins.fromTOML (builtins.readFile ./Cargo.toml)).workspace.package.version;
         strictDeps = true;
         doCheck = false;
         cargoArtifacts = null;
