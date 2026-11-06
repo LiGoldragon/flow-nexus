@@ -3,13 +3,13 @@ resolver = "2"
 members = ["crates/types", "crates/runtime", "crates/platform"]
 
 [workspace.package]
-version = "1.0.0"
+version = "1.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 rkyv = { version = "0.8", default-features = false, features = ["std", "bytecheck", "little_endian", "pointer_width_32", "unaligned"] }
-datom-codec = { git = "https://github.com/LiGoldragon/datom-codec", rev = "eb10157a0336e3aa2401e5b2046211fc8e736397" }
+datom-codec = { git = "https://github.com/LiGoldragon/datom-codec", rev = "eabead48b31e8d4f429d7fb156dd18548bbd79c1" }
 flow-nexus-types = { path = "crates/types" }
 flow-nexus-platform = { path = "crates/platform" }
 
